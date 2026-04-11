@@ -8,6 +8,8 @@ const {
     getScans,
     getScanById,
     updateScanStatus,
+    searchScans,
+    getScanStats,
 } = require('../controllers/scanController');
 
 const router = express.Router();
@@ -40,6 +42,8 @@ router.post(
 );
 
 router.get('/', protect, getScans);
+router.get('/stats', protect, getScanStats);  // ⚠️ before /:id
+router.get('/search', protect, searchScans);  // ⚠️ before /:id
 router.get('/:id', protect, getScanById);
 
 // Keep this for your scanner worker / admin task later

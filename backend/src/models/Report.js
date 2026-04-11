@@ -34,7 +34,7 @@ const ReportSchema = new mongoose.Schema(
                 cve: { type: String, index: true },
                 severity: {
                     type: String,
-                    enum: ['critical', 'high', 'medium', 'low', 'unknown'],
+                    enum: ['critical', 'high', 'medium', 'low', 'negligible', 'unknown'],
                     default: 'unknown',
                 },
                 description: { type: String },

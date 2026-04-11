@@ -1,269 +1,109 @@
 const mongoose = require('mongoose');
 const Scan = require('../models/Scan');
 const Report = require('../models/Report');
-const { runScan } = require("../services/scanService");
+const { runScan } = require('../services/scanService');
 
-const allowedSourceTypes = ['upload', 'github', 'docker', 'link'];
+// ─── helpers ─────────────────────────────────────────────────────────────────
 
 const getOrgId = (user) => {
     if (!user) return null;
-    if (user.organization && typeof user.organization === 'object') return user.organization._id;
-    return user.organization;
+    const raw = (user.organization && typeof user.organization === 'object')
+        ? user.organization._id
+        : user.organization;
+    try { return new mongoose.Types.ObjectId(raw.toString()); } catch { return raw; }
+};
+
+// regular user → only their own scans
+// admin        → all scans in their organisation
+const buildBaseFilter = (user) => {
+    if (user.role === 'admin') {
+        return { organization: getOrgId(user) };
+    }
+    return { uploadedBy: new mongoose.Types.ObjectId(user._id.toString()) };
 };
 
 const detectFormatFromFile = (file) => {
     if (!file) return 'cyclonedx';
-
     const name = file.originalname.toLowerCase();
-
-    if (name.includes('spdx') || name.endsWith('.spdx') || name.endsWith('.spdx.json')) {
-        return 'spdx';
-    }
-
+    if (name.includes('spdx') || name.endsWith('.spdx') || name.endsWith('.spdx.json')) return 'spdx';
     return 'cyclonedx';
 };
 
-// const createScan = async (req, res) => {
-//     try {
-//         const projectName = req.body.projectName;
-//         const sourceType = req.body.sourceType;
-//         const repoUrl = req.body.repoUrl;
-//         const imageName = req.body.imageName;
-//         const link = req.body.link;
-//         const notes = req.body.notes;
-
-//         const organizationId = getOrgId(req.user);
-
-//         if (!organizationId) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: 'User organization not found.',
-//             });
-//         }
-
-//         if (!projectName || !projectName.trim()) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: 'Project name is required.',
-//             });
-//         }
-
-//         if (!sourceType || !allowedSourceTypes.includes(sourceType)) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: 'Invalid scan source type.',
-//             });
-//         }
-
-//         let sourceValue = '';
-//         let format = 'cyclonedx';
-
-//         if (sourceType === 'upload') {
-//             if (!req.file) {
-//                 return res.status(400).json({
-//                     success: false,
-//                     message: 'Please upload a file.',
-//                 });
-//             }
-
-//             sourceValue = req.file.path;
-//             format = detectFormatFromFile(req.file);
-//         }
-
-//         if (sourceType === 'github') {
-//             if (!repoUrl || !repoUrl.trim()) {
-//                 return res.status(400).json({
-//                     success: false,
-//                     message: 'Git repository URL is required.',
-//                 });
-//             }
-
-//             sourceValue = repoUrl.trim();
-//         }
-
-//         if (sourceType === 'docker') {
-//             if (!imageName || !imageName.trim()) {
-//                 return res.status(400).json({
-//                     success: false,
-//                     message: 'Docker image name is required.',
-//                 });
-//             }
-
-//             sourceValue = imageName.trim();
-//         }
-
-//         if (sourceType === 'link') {
-//             if (!link || !link.trim()) {
-//                 return res.status(400).json({
-//                     success: false,
-//                     message: 'Link is required.',
-//                 });
-//             }
-
-//             sourceValue = link.trim();
-//         }
-
-//         const scan = await Scan.create({
-//             organization: organizationId,
-//             uploadedBy: req.user._id,
-//             filename: projectName.trim(),
-//             format,
-//             specVersion: '',
-//             componentCount: 0,
-//             scanType: sourceType,
-//             source: sourceValue,
-//             status: 'running',
-//             startedAt: new Date(),
-//             notes: notes ? notes.trim() : '',
-//         });
-
-//         return res.status(201).json({
-//             success: true,
-//             message: 'Scan created successfully.',
-//             data: {
-//                 scan,
-//             },
-//         });
-//     } catch (error) {
-//         console.error('Create scan error:', error);
-
-//         if (error.code === 11000) {
-//             return res.status(409).json({
-//                 success: false,
-//                 message: 'Duplicate scan entry.',
-//             });
-//         }
-
-//         return res.status(500).json({
-//             success: false,
-//             message: 'Server error while creating scan.',
-//         });
-//     }
-// };
-
+// ─── CREATE ──────────────────────────────────────────────────────────────────
 const createScan = async (req, res) => {
     try {
-        // 🔍 DEBUG (remove later)
-        console.log("BODY:", req.body);
-        console.log("FILE:", req.file);
+        const projectName    = req.body.projectName;
+        const sourceTypeRaw  = req.body.sourceType;
+        const repoUrl        = req.body.repoUrl;
+        const imageName      = req.body.imageName;
+        const link           = req.body.link;
+        const notes          = req.body.notes;
 
-        // ✅ Safe extraction (important for FormData)
-        const projectName = req.body.projectName;
-        const sourceTypeRaw = req.body.sourceType;
-        const repoUrl = req.body.repoUrl;
-        const imageName = req.body.imageName;
-        const link = req.body.link;
-        const notes = req.body.notes;
-
-        // ✅ Clean & normalize sourceType
         const sourceType = sourceTypeRaw?.toString().trim().toLowerCase();
+        const allowedSourceTypes = ['upload', 'github', 'docker'];
 
-        // ✅ Allowed types
-        const allowedSourceTypes = ['upload', 'github', 'docker', 'link'];
-
-        // 🏢 Get organization from user
-        console.log("USER:", req.user);
-        const organizationId = req.user.organization || req.user._id;
-        // const organizationId = getOrgId(req.user);
+        const organizationId = getOrgId(req.user);
 
         if (!organizationId) {
-            return res.status(400).json({
-                success: false,
-                message: 'User organization not found.',
-            });
+            return res.status(400).json({ success: false, message: 'User organization not found.' });
         }
-
-        // 📝 Validate project name
-        if (!projectName || !projectName.trim()) {
-            return res.status(400).json({
-                success: false,
-                message: 'Project name is required.',
-            });
+        if (!projectName?.trim()) {
+            return res.status(400).json({ success: false, message: 'Project name is required.' });
         }
-
-        // 🔍 Validate source type
         if (!sourceType || !allowedSourceTypes.includes(sourceType)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid scan source type.',
-            });
+            return res.status(400).json({ success: false, message: 'Invalid scan source type.' });
         }
 
-        let sourceValue = '';
+        // let sourceValue = '';
+        let sourceValue = null;
         let format = 'cyclonedx';
 
-        // 📂 FILE UPLOAD
         if (sourceType === 'upload') {
-            if (!req.file) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'File not received. Please upload again.',
-                });
-            }
-
+            if (!req.file) return res.status(400).json({ success: false, message: 'File not received. Please upload again.' });
             sourceValue = req.file.path;
+            format = detectFormatFromFile(req.file);
         }
-
-        // 🐙 GITHUB
         if (sourceType === 'github') {
-            if (!repoUrl || !repoUrl.trim()) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Git repository URL is required.',
-                });
-            }
-
+            if (!repoUrl?.trim()) return res.status(400).json({ success: false, message: 'Git repository URL is required.' });
             sourceValue = repoUrl.trim();
         }
-
-        // 🐳 DOCKER
+        // if (sourceType === 'docker') {
+        //     if (!imageName?.trim()) return res.status(400).json({ success: false, message: 'Docker image name is required.' });
+        //     sourceValue = imageName.trim();
+        // }
+         
         if (sourceType === 'docker') {
-            if (!imageName || !imageName.trim()) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Docker image name is required.',
-                });
-            }
+    if (!imageName?.trim()) {
+        return res.status(400).json({ success: false, message: 'Docker image name is required.' });
+    }
 
-            sourceValue = imageName.trim();
-        }
+    // ✅ store both image + optional link
+    sourceValue = {
+        image: imageName.trim(),
+        link: link?.trim() || null
+    };
+}
 
-        // 🔗 LINK
-        if (sourceType === 'link') {
-            if (!link || !link.trim()) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Link is required.',
-                });
-            }
+        // if (sourceType === 'link') {
+        //     if (!link?.trim()) return res.status(400).json({ success: false, message: 'Link is required.' });
+        //     sourceValue = link.trim();
+        // }
 
-            sourceValue = link.trim();
-        }
-
-        // 🚀 CREATE SCAN
-        // 🚀 CREATE SCAN
         const scan = await Scan.create({
-            organization: organizationId,
-            uploadedBy: req.user._id,
-
-            filename: projectName.trim(),
+            organization:   organizationId,
+            uploadedBy:     req.user._id,
+            filename:       projectName.trim(),
             format,
-            specVersion: '',
+            specVersion:    '',
             componentCount: 0,
-
-            scanType: sourceType,
-            source: sourceValue,
-
-            status: 'running',
-            startedAt: new Date(),
-
-            notes: notes ? notes.trim() : '',
+            scanType:       sourceType,
+            source:         sourceValue,
+            status:         'running',
+            startedAt:      new Date(),
+            notes:          notes ? notes.trim() : '',
         });
 
-        // 🔥 IMPORTANT: RUN SCAN ASYNC
-        setImmediate(() => {
-            runScan(scan);
-        });
+        setImmediate(() => runScan(scan));
 
         return res.status(201).json({
             success: true,
@@ -273,31 +113,18 @@ const createScan = async (req, res) => {
 
     } catch (error) {
         console.error('Create scan error:', error);
-
-        // 🔁 Duplicate error
-        if (error.code === 11000) {
-            return res.status(409).json({
-                success: false,
-                message: 'Duplicate scan entry.',
-            });
-        }
-
-        return res.status(500).json({
-            success: false,
-            message: 'Server error while creating scan.',
-        });
+        if (error.code === 11000) return res.status(409).json({ success: false, message: 'Duplicate scan entry.' });
+        return res.status(500).json({ success: false, message: 'Server error while creating scan.' });
     }
 };
+
+// ─── LIST ────────────────────────────────────────────────────────────────────
 const getScans = async (req, res) => {
     try {
-        const organizationId = getOrgId(req.user);
         const { status, scanType, page = 1, limit = 20 } = req.query;
 
-        const filter = {
-            organization: organizationId,
-        };
-
-        if (status) filter.status = status;
+        const filter = buildBaseFilter(req.user);
+        if (status)   filter.status   = status;
         if (scanType) filter.scanType = scanType;
 
         const skip = (Number(page) - 1) * Number(limit);
@@ -314,133 +141,177 @@ const getScans = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            data: {
-                scans,
-                total,
-                page: Number(page),
-                limit: Number(limit),
-            },
+            data: { scans, total, page: Number(page), limit: Number(limit) },
         });
     } catch (error) {
         console.error('Get scans error:', error);
-        return res.status(500).json({
-            success: false,
-            message: 'Server error while fetching scans.',
-        });
+        return res.status(500).json({ success: false, message: 'Server error while fetching scans.' });
     }
 };
 
+// ─── GET BY ID ───────────────────────────────────────────────────────────────
 const getScanById = async (req, res) => {
     try {
-        const organizationId = getOrgId(req.user);
+        const filter = buildBaseFilter(req.user);
+        filter._id = req.params.id;
 
-        const scan = await Scan.findOne({
-            _id: req.params.id,
-            organization: organizationId,
-        })
+        const scan = await Scan.findOne(filter)
             .populate('uploadedBy', 'name email')
             .populate('report');
 
-        if (!scan) {
-            return res.status(404).json({
-                success: false,
-                message: 'Scan not found.',
-            });
-        }
+        if (!scan) return res.status(404).json({ success: false, message: 'Scan not found.' });
 
-        return res.status(200).json({
-            success: true,
-            data: {
-                scan,
-            },
-        });
+        return res.status(200).json({ success: true, data: { scan } });
     } catch (error) {
         console.error('Get scan by id error:', error);
-        return res.status(500).json({
-            success: false,
-            message: 'Server error while fetching scan.',
-        });
+        return res.status(500).json({ success: false, message: 'Server error while fetching scan.' });
     }
 };
 
-// Use this later from your scanner worker when CycloneDX/Syft finishes
+// ─── UPDATE STATUS (admin only) ──────────────────────────────────────────────
 const updateScanStatus = async (req, res) => {
     try {
-        const organizationId = getOrgId(req.user);
         const { id } = req.params;
-
         const {
-            status,
-            errorMessage,
-            componentCount,
-            specVersion,
-            vulnTotal,
-            vulnCritical,
-            vulnHigh,
-            vulnMedium,
-            vulnLow,
-            reportId,
+            status, errorMessage, componentCount, specVersion,
+            vulnTotal, vulnCritical, vulnHigh, vulnMedium, vulnLow, reportId,
         } = req.body;
 
         if (!['running', 'completed', 'failed', 'pending'].includes(status)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid scan status.',
-            });
+            return res.status(400).json({ success: false, message: 'Invalid scan status.' });
         }
 
-        const update = {
-            status,
-        };
+        const update = { status };
+        if (status === 'running')                      update.startedAt   = new Date();
+        if (['completed', 'failed'].includes(status))  update.completedAt = new Date();
 
-        if (status === 'running' && !update.startedAt) {
-            update.startedAt = new Date();
-        }
-
-        if (status === 'completed' || status === 'failed') {
-            update.completedAt = new Date();
-        }
-
-        if (errorMessage !== undefined) update.errorMessage = errorMessage;
+        if (errorMessage   !== undefined) update.errorMessage   = errorMessage;
         if (componentCount !== undefined) update.componentCount = componentCount;
-        if (specVersion !== undefined) update.specVersion = specVersion;
-        if (vulnTotal !== undefined) update.vulnTotal = vulnTotal;
-        if (vulnCritical !== undefined) update.vulnCritical = vulnCritical;
-        if (vulnHigh !== undefined) update.vulnHigh = vulnHigh;
-        if (vulnMedium !== undefined) update.vulnMedium = vulnMedium;
-        if (vulnLow !== undefined) update.vulnLow = vulnLow;
-        if (reportId) update.report = reportId;
+        if (specVersion    !== undefined) update.specVersion    = specVersion;
+        if (vulnTotal      !== undefined) update.vulnTotal      = vulnTotal;
+        if (vulnCritical   !== undefined) update.vulnCritical   = vulnCritical;
+        if (vulnHigh       !== undefined) update.vulnHigh       = vulnHigh;
+        if (vulnMedium     !== undefined) update.vulnMedium     = vulnMedium;
+        if (vulnLow        !== undefined) update.vulnLow        = vulnLow;
+        if (reportId)                     update.report         = reportId;
 
         const scan = await Scan.findOneAndUpdate(
-            { _id: id, organization: organizationId },
+            { _id: id, organization: getOrgId(req.user) },
             { $set: update },
             { new: true, runValidators: true }
         );
 
-        if (!scan) {
-            return res.status(404).json({
-                success: false,
-                message: 'Scan not found.',
-            });
-        }
+        if (!scan) return res.status(404).json({ success: false, message: 'Scan not found.' });
 
-        return res.status(200).json({
-            success: true,
-            message: 'Scan updated successfully.',
-            data: { scan },
-        });
+        return res.status(200).json({ success: true, message: 'Scan updated.', data: { scan } });
     } catch (error) {
         console.error('Update scan status error:', error);
-        return res.status(500).json({
-            success: false,
-            message: 'Server error while updating scan.',
-        });
+        return res.status(500).json({ success: false, message: 'Server error while updating scan.' });
     }
 };
 
+// ─── SEARCH ──────────────────────────────────────────────────────────────────
+const searchScans = async (req, res) => {
+    try {
+        const { q, status, scanType, page = 1, limit = 20 } = req.query;
+
+        if (!q?.trim()) {
+            return res.status(400).json({ success: false, message: 'Search query "q" is required.' });
+        }
+
+        const regex  = new RegExp(q.trim(), 'i');
+        const filter = buildBaseFilter(req.user);
+
+        filter.$or = [
+            { filename: regex },
+            // { source:   regex },
+            { "source.image": regex },
+{ "source.link": regex },
+            { notes:    regex },
+            { scanType: regex },
+        ];
+
+        if (status)   filter.status   = status;
+        if (scanType) filter.scanType = scanType;
+
+        const skip = (Number(page) - 1) * Number(limit);
+
+        const [scans, total] = await Promise.all([
+            Scan.find(filter)
+                .populate('uploadedBy', 'name email')
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(Number(limit)),
+            Scan.countDocuments(filter),
+        ]);
+
+        return res.status(200).json({
+            success: true,
+            data: { scans, total, page: Number(page), limit: Number(limit), query: q.trim() },
+        });
+    } catch (error) {
+        console.error('Search scans error:', error);
+        return res.status(500).json({ success: false, message: 'Server error while searching scans.' });
+    }
+};
+
+// ─── STATS ───────────────────────────────────────────────────────────────────
+const getScanStats = async (req, res) => {
+    try {
+        const matchFilter = req.user.role === 'admin'
+            ? { organization: new mongoose.Types.ObjectId(getOrgId(req.user).toString()) }
+            : { uploadedBy:   new mongoose.Types.ObjectId(req.user._id.toString()) };
+
+        const [statusCounts, vulnAgg] = await Promise.all([
+            Scan.aggregate([
+                { $match: matchFilter },
+                { $group: { _id: '$status', count: { $sum: 1 } } },
+            ]),
+            Scan.aggregate([
+                { $match: { ...matchFilter, status: 'completed' } },
+                {
+                    $group: {
+                        _id:                  null,
+                        totalComponents:      { $sum: '$componentCount' },
+                        totalVulnerabilities: { $sum: '$vulnTotal' },
+                        vulnCritical:         { $sum: '$vulnCritical' },
+                        vulnHigh:             { $sum: '$vulnHigh' },
+                        vulnMedium:           { $sum: '$vulnMedium' },
+                        vulnLow:              { $sum: '$vulnLow' },
+                    },
+                },
+            ]),
+        ]);
+
+        const counts = { running: 0, completed: 0, failed: 0, pending: 0 };
+        statusCounts.forEach((s) => { counts[s._id] = s.count; });
+        const agg = vulnAgg[0] || {};
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                totalScans:           Object.values(counts).reduce((a, b) => a + b, 0),
+                ...counts,
+                totalComponents:      agg.totalComponents      || 0,
+                totalVulnerabilities: agg.totalVulnerabilities || 0,
+                vulnCritical:         agg.vulnCritical         || 0,
+                vulnHigh:             agg.vulnHigh             || 0,
+                vulnMedium:           agg.vulnMedium           || 0,
+                vulnLow:              agg.vulnLow              || 0,
+            },
+        });
+    } catch (error) {
+        console.error('Get scan stats error:', error);
+        return res.status(500).json({ success: false, message: 'Server error while fetching stats.' });
+    }
+};
+
+// ─── EXPORTS ─────────────────────────────────────────────────────────────────
 module.exports = {
     createScan,
     getScans,
     getScanById,
     updateScanStatus,
+    searchScans,
+    getScanStats,
 };

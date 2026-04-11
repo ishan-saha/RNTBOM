@@ -48,15 +48,26 @@ const ScanSchema = new mongoose.Schema(
         // 🔍 Scan type
         scanType: {
             type: String,
-            enum: ['upload', 'github', 'docker', 'link'],
+            enum: ['upload', 'github', 'docker'],
             required: true,
         },
 
         // 🌐 Source (repo URL / image / file path)
-        source: {
-            type: String,
-            default: '',
-        },
+        // source: {
+        //     type: String,
+        //     default: '',
+        // },
+//         source: {
+//   image: { type: String },
+//   link: { type: String }
+// },
+
+source: {
+  filePath: String,
+  repoUrl: String,
+  image: String,
+  link: String
+},
 
         // ⚡ Status
         status: {
@@ -93,9 +104,10 @@ const ScanSchema = new mongoose.Schema(
 );
 
 
-// 🚀 Indexes (important for dashboard queries)
-ScanSchema.index({ organization: 1, status: 1 });
-ScanSchema.index({ uploadedBy: 1 });
+// 🚀 Indexes
+ScanSchema.index({ uploadedBy: 1, status: 1 });   // primary: user's scans by status
+ScanSchema.index({ uploadedBy: 1, createdAt: -1 }); // user's scans sorted by date
+ScanSchema.index({ organization: 1, status: 1 });  // org-level (admin use)
 ScanSchema.index({ createdAt: -1 });
 
 
