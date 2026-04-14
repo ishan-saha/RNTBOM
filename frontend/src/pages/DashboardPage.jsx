@@ -138,15 +138,17 @@ const DashboardPage = () => {
   };
 
   return (
-    <div className="p-6 md:p-10 bg-[#0f0f1a] min-h-screen text-white">
+    // Responsive padding: compact on mobile (≤480px), medium on tablet (481-768px), generous on larger screens.
+    <div className="p-4 sm:p-6 md:p-8 lg:p-10 bg-[#0f0f1a] min-h-screen text-white">
 
-      {/* Header */}
-      <h1 className="text-2xl font-bold mb-6">
+      {/* Scale heading down on mobile to prevent overflow on ≤480px screens. */}
+      <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
         Security Dashboard
       </h1>
 
       {/* ===== STATS ===== */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      {/* 1-col on mobile, 2-col on tablet/medium, 4-col on large desktop. */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
         {stats.map((stat, i) => (
           <div
             key={i}
@@ -162,7 +164,8 @@ const DashboardPage = () => {
       </div>
 
       {/* ===== MAIN GRID ===== */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Stack CVE feed and scan-status card on mobile/tablet; side-by-side only on large desktops. */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
 
         {/* CVE FEED */}
         <div className="lg:col-span-2 bg-[#13131f] border border-white/10 rounded-xl p-5">
@@ -229,12 +232,13 @@ const DashboardPage = () => {
       </div>
 
       {/* ===== CVE → EXP → OPEN SCAN ===== */}
-      <div className="mt-6 bg-[#13131f] border border-white/10 rounded-xl p-5">
-        <h2 className="text-lg font-semibold mb-3">
+      <div className="mt-4 sm:mt-6 bg-[#13131f] border border-white/10 rounded-xl p-4 sm:p-5">
+        <h2 className="text-base sm:text-lg font-semibold mb-3">
           CVE → Exploit → Open Scan
         </h2>
 
-        <div className="flex flex-wrap gap-3 text-sm text-slate-400">
+        {/* Allow pipeline text to wrap on ≤480px so it doesn't bleed outside the card. */}
+        <div className="flex flex-wrap gap-2 sm:gap-3 text-xs sm:text-sm text-slate-400">
           <span className="bg-white/5 px-3 py-1 rounded">CVE Detected</span>
           <span>→</span>
           <span className="bg-white/5 px-3 py-1 rounded">Exploit Available</span>

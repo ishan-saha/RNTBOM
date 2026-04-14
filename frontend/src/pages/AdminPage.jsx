@@ -52,12 +52,14 @@ const AdminPage = () => {
   const userCount = users.filter((u) => u.role === 'user').length;
 
   return (
-    <div className="min-h-[calc(100vh-64px)] bg-[#0f0f1a] p-6 md:p-10">
+    // Responsive padding: tight on mobile (≤480px), medium on tablet (481-768px), and generous on desktop.
+    <div className="min-h-[calc(100vh-64px)] bg-[#0f0f1a] p-4 sm:p-6 md:p-8 lg:p-10">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-3">
+            {/* Use smaller heading on narrow mobile to prevent layout shift from icon+text overflow. */}
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white flex items-center gap-3">
               <Shield className="w-7 h-7 text-amber-400" />
               Admin Panel
             </h1>
@@ -74,7 +76,8 @@ const AdminPage = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        {/* 1-col on mobile, 3-col from 481px (sm) onwards so cards look balanced on every breakpoint. */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
           <div className="bg-white/4 border border-white/8 rounded-xl p-5 flex items-center gap-4">
             <div className="p-3 bg-indigo-600/20 text-indigo-400 rounded-xl">
               <Users className="w-5 h-5" />
@@ -117,6 +120,7 @@ const AdminPage = () => {
         </div>
 
         {/* Table */}
+        {/* Wrap the entire table block so overflow-x-auto correctly limits table to viewport width on small screens. */}
         <div className="bg-[#13131f]/80 backdrop-blur-xl border border-white/8 rounded-2xl overflow-hidden">
           {loading ? (
             <div className="flex items-center justify-center py-20">
@@ -136,16 +140,17 @@ const AdminPage = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/8">
-                    <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-6 py-4">#</th>
-                    <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-6 py-4">User</th>
-                    <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-4">Role</th>
-                    <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-4">
+                    {/* Start table columns with tighter padding so all 6 cols fit without horizontal scroll on 768px+ tablets. */}
+                    <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-3 sm:px-6 py-3 sm:py-4">#</th>
+                    <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-3 sm:px-6 py-3 sm:py-4">User</th>
+                    <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-3 sm:px-4 py-3 sm:py-4">Role</th>
+                    <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-3 sm:px-4 py-3 sm:py-4">
                       <span className="flex items-center gap-1"><Building2 className="w-3.5 h-3.5" /> Organization</span>
                     </th>
-                    <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-4">
+                    <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-3 sm:px-4 py-3 sm:py-4">
                       <span className="flex items-center gap-1"><Globe className="w-3.5 h-3.5" /> Country</span>
                     </th>
-                    <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 py-4">
+                    <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-3 sm:px-4 py-3 sm:py-4">
                       <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> Joined</span>
                     </th>
                   </tr>
@@ -156,27 +161,28 @@ const AdminPage = () => {
                       key={u._id}
                       className={`transition-colors hover:bg-white/3 ${u._id === user?._id ? 'bg-indigo-600/5' : ''}`}
                     >
-                      <td className="px-6 py-4 text-xs text-slate-500">{idx + 1}</td>
-                      <td className="px-6 py-4">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs text-slate-500">{idx + 1}</td>
+                      <td className="px-3 sm:px-6 py-3 sm:py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-semibold text-white flex-shrink-0">
                             {u.name?.charAt(0).toUpperCase()}
                           </div>
-                          <div>
+                          {/* Prevent long email addresses from blowing out column width on ≤768px. */}
+                          <div className="min-w-0">
                             <p className="text-sm font-medium text-white flex items-center gap-1.5">
-                              {u.name}
+                              <span className="truncate">{u.name}</span>
                               {u._id === user?._id && (
                                 <span className="text-[10px] bg-indigo-600/30 text-indigo-300 px-1.5 py-0.5 rounded-full border border-indigo-500/30">You</span>
                               )}
                             </p>
-                            <p className="text-xs text-slate-500">{u.email}</p>
+                            <p className="text-xs text-slate-500 truncate max-w-[150px] sm:max-w-xs">{u.email}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-4"><RoleBadge role={u.role} /></td>
-                      <td className="px-4 py-4 text-sm text-slate-300">{u.organization || '—'}</td>
-                      <td className="px-4 py-4 text-sm text-slate-300">{u.country || '—'}</td>
-                      <td className="px-4 py-4 text-xs text-slate-400">{formatDate(u.createdAt)}</td>
+                      <td className="px-3 sm:px-4 py-3 sm:py-4"><RoleBadge role={u.role} /></td>
+                      <td className="px-3 sm:px-4 py-3 sm:py-4 text-sm text-slate-300 whitespace-nowrap">{u.organization || '—'}</td>
+                      <td className="px-3 sm:px-4 py-3 sm:py-4 text-sm text-slate-300 whitespace-nowrap">{u.country || '—'}</td>
+                      <td className="px-3 sm:px-4 py-3 sm:py-4 text-xs text-slate-400 whitespace-nowrap">{formatDate(u.createdAt)}</td>
                     </tr>
                   ))}
                 </tbody>

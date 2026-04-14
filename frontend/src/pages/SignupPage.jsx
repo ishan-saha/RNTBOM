@@ -106,14 +106,17 @@ const SignupPage = () => {
     }`;
 
   return (
-    <div className="min-h-screen bg-[#0f0f1a] flex items-center justify-center p-4 py-12 relative overflow-hidden">
+    // Reduced vertical padding on mobile (≤480px) to ensure short-viewport devices can scroll the form comfortably.
+    <div className="min-h-screen bg-[#0f0f1a] flex items-center justify-center p-3 sm:p-4 py-6 sm:py-12 relative overflow-hidden">
       {/* Background blobs */}
       <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-indigo-600/8 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-1/4 w-[500px] h-[500px] bg-purple-600/8 rounded-full blur-3xl pointer-events-none" />
 
+      {/* Full-width on mobile; capped at max-lg on 769px+ so the two-column field rows have comfortable space. */}
       <div className="w-full max-w-lg relative z-10">
         {/* Card */}
-        <div className="bg-[#13131f]/80 backdrop-blur-xl border border-white/8 rounded-2xl p-8 shadow-2xl">
+        {/* Use tighter inner padding on mobile so form fields aren't crowded against a narrow viewport. */}
+        <div className="bg-[#13131f]/80 backdrop-blur-xl border border-white/8 rounded-2xl p-4 sm:p-8 shadow-2xl">
           {/* Header */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-14 h-14 bg-indigo-600/20 rounded-2xl mb-4">

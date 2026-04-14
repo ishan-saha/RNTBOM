@@ -1,9 +1,5 @@
-
-
-
-
-
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useState } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
@@ -16,6 +12,7 @@ import DashboardPage from './pages/DashboardPage';
 import AdminPage from './pages/AdminPage';
 import ActiveScans from "./pages/ActiveScans";
 import CompletedScans from "./pages/CompletedScans";
+import FailedScans from './pages/FailedScans';
 import NewScan from "./pages/NewScan";
 import AdminDashboard from './pages/AdminDashboard';
 import ProfilePage from './pages/ProfilePage';
@@ -24,24 +21,40 @@ import ScanDetailPage from './pages/ScanDetailPage';
 /* ================= Layout Wrapper ================= */
 const AppLayout = () => {
   const location = useLocation();
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Hide sidebar & navbar on auth pages
   const hideLayout = ['/login', '/signup'].includes(location.pathname);
 
+  // Close the mobile drawer after route changes so content is immediately visible on small screens.
+  const closeMobileSidebar = () => setMobileSidebarOpen(false);
+
   return (
-    <div className="flex bg-[#0f0f1a] min-h-screen">
+    // Use a clipped, full-height shell to prevent horizontal bleed on mobile and tablet widths.
+    <div className="flex bg-[#0f0f1a] min-h-screen overflow-x-clip">
 
       {/* Sidebar */}
-      {!hideLayout && <Sidebar />}
+      {!hideLayout && (
+        <Sidebar
+          mobileOpen={mobileSidebarOpen}
+          onCloseMobile={closeMobileSidebar}
+        />
+      )}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      {/* Keep content shrinkable so tables/cards can scroll instead of forcing page overflow at 481-1024px. */}
+      <div className="flex-1 flex flex-col min-w-0">
 
         {/* Navbar */}
-        {!hideLayout && <Navbar />}
+        {!hideLayout && (
+          <Navbar
+            onOpenMobileSidebar={() => setMobileSidebarOpen(true)}
+          />
+        )}
 
         {/* Pages */}
-        <div className="flex-1">
+        {/* Add responsive vertical breathing room that stays compact on <=480px devices. */}
+        <div className="flex-1 min-w-0">
           <Routes>
             {/* Public */}
             <Route path="/login" element={<LoginPage />} />
@@ -89,6 +102,15 @@ const AppLayout = () => {
               element={
                 <PrivateRoute>
                   <CompletedScans />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/scans/failed"
+              element={
+                <PrivateRoute>
+                  <FailedScans />
                 </PrivateRoute>
               }
             />

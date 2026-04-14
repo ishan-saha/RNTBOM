@@ -81,14 +81,17 @@ const NewScan = () => {
     };
 
     return (
-        <div className="p-6 md:p-10 bg-[#0f0f1a] min-h-screen text-white">
+        // Responsive outer padding to prevent flush-edge forms on mobile (≤480px).
+        <div className="p-4 sm:p-6 md:p-8 lg:p-10 bg-[#0f0f1a] min-h-screen text-white">
 
-            <h1 className="text-2xl font-bold mb-6 flex items-center gap-2">
+            {/* Reduce heading size on mobile so icon+label fits within viewport at ≤480px. */}
+            <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2">
                 <PlusCircle className="w-5 h-5 text-indigo-400" />
                 Start New Scan
             </h1>
 
-            <form onSubmit={handleSubmit} className="max-w-3xl bg-[#13131f] p-6 rounded-2xl border border-white/10 space-y-6">
+            {/* Form fills full width on mobile/tablet; capped at 3xl on large desktops to keep it readable. */}
+            <form onSubmit={handleSubmit} className="w-full max-w-3xl bg-[#13131f] p-4 sm:p-6 rounded-2xl border border-white/10 space-y-4 sm:space-y-6">
 
                 {/* Project Name */}
                 <div>
@@ -106,7 +109,8 @@ const NewScan = () => {
                 {/* Source Type */}
                 <div>
                     <p className="text-sm text-slate-400 mb-2">Scan Source</p>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {/* 2-col grid on ≤768px keeps source type buttons visible without tiny cramped layout. */}
+                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
                         {[
                             { key: "upload", label: "Upload File", icon: Upload },
                             { key: "github", label: "Git Repo",    icon: GitBranch },

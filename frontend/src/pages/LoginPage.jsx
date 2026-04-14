@@ -86,14 +86,17 @@ const LoginPage = () => {
     }
   };
   return (
-    <div className="min-h-screen bg-[#0f0f1a] flex items-center justify-center p-4 relative overflow-hidden">
+    // Add vertical padding so the card never touches browser chrome on short mobile viewports.
+    <div className="min-h-screen bg-[#0f0f1a] flex items-center justify-center p-4 py-8 sm:py-12 relative overflow-hidden">
       {/* Background blobs */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
 
+      {/* Card fills full width on mobile (≤480px), capped at max-md on tablet+, centered on desktop. */}
       <div className="w-full max-w-md relative z-10">
         {/* Card */}
-        <div className="bg-[#13131f]/80 backdrop-blur-xl border border-white/8 rounded-2xl p-8 shadow-2xl">
+        {/* Compact inner padding on mobile so form fields aren't pushed against a narrow screen. */}
+        <div className="bg-[#13131f]/80 backdrop-blur-xl border border-white/8 rounded-2xl p-5 sm:p-8 shadow-2xl">
           {/* Header */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-14 h-14 bg-indigo-600/20 rounded-2xl mb-4">

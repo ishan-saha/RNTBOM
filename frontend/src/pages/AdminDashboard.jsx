@@ -25,22 +25,25 @@ const AdminDashboard = () => {
     ];
 
     return (
-        <div className="p-6 md:p-10 bg-[#0f0f1a] min-h-screen text-white">
+        // Responsive padding: tight on mobile (≤480px), medium on tablet, generous on desktop (≥1025px).
+        <div className="p-4 sm:p-6 md:p-8 lg:p-10 bg-[#0f0f1a] min-h-screen text-white">
 
-            <h1 className="text-2xl font-bold mb-6">
+            {/* Scale heading down on small screens to avoid horizontal overflow at ≤480px. */}
+            <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
                 Admin Security Dashboard
             </h1>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {/* 1-col on mobile, 2-col on tablet, 4-col on large desktop to prevent card overflow. */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
                 {stats.map((s, i) => (
                     <StatCard key={i} {...s} />
                 ))}
             </div>
 
             {/* CVE Feed */}
-            <div className="bg-[#13131f] border border-white/10 rounded-xl p-6 mb-6">
-                <h2 className="text-lg font-semibold mb-4">
+            <div className="bg-[#13131f] border border-white/10 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
+                <h2 className="text-base sm:text-lg font-semibold mb-4">
                     CVE Feed (RSS)
                 </h2>
 
@@ -48,9 +51,9 @@ const AdminDashboard = () => {
                     {cveFeed.map((item, i) => (
                         <div
                             key={i}
-                            className="flex justify-between items-center bg-white/5 p-3 rounded-lg"
+                            className="flex justify-between items-center bg-white/5 p-3 rounded-lg gap-2"
                         >
-                            <p>{item.cve}</p>
+                            <p className="text-sm truncate">{item.cve}</p>
                             <span className="text-xs text-red-400">{item.severity}</span>
                         </div>
                     ))}
@@ -58,8 +61,8 @@ const AdminDashboard = () => {
             </div>
 
             {/* Scan Summary */}
-            <div className="bg-[#13131f] border border-white/10 rounded-xl p-6">
-                <h2 className="text-lg font-semibold mb-4">
+            <div className="bg-[#13131f] border border-white/10 rounded-xl p-4 sm:p-6">
+                <h2 className="text-base sm:text-lg font-semibold mb-4">
                     Scan Status
                 </h2>
 

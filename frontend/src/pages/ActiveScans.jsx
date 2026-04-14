@@ -217,9 +217,11 @@ const ActiveScans = () => {
     };
 
     return (
-        <div className="p-6 md:p-10 bg-[#0f0f1a] min-h-screen text-white">
+        // Responsive outer padding: compact on mobile (≤480px), scales up for tablet and desktop.
+        <div className="p-4 sm:p-6 md:p-8 lg:p-10 bg-[#0f0f1a] min-h-screen text-white">
 
-            <h1 className="text-2xl font-bold mb-6 flex items-center gap-2">
+            {/* Smaller heading on mobile prevents text from pushing outside the viewport at ≤480px. */}
+            <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2">
                 <Clock className="w-5 h-5 text-yellow-400" />
                 Active Scans
             </h1>
@@ -236,12 +238,14 @@ const ActiveScans = () => {
                         return (
                             <div
                                 key={scan._id}
-                                className="bg-[#13131f] border border-white/10 rounded-xl p-5 space-y-4"
+                                // Reduce card padding on mobile so content breathes without overflowing on ≤480px.
+                                className="bg-[#13131f] border border-white/10 rounded-xl p-4 sm:p-5 space-y-3 sm:space-y-4"
                             >
                                 {/* Top */}
-                                <div className="flex justify-between items-center">
+                                {/* Allow filename + status to wrap on very narrow screens instead of overflowing. */}
+                                <div className="flex flex-wrap justify-between items-center gap-2">
 
-                                    <h2 className="text-lg font-semibold">
+                                    <h2 className="text-base sm:text-lg font-semibold min-w-0 truncate">
                                         {scan.filename}
                                     </h2>
 
@@ -260,7 +264,8 @@ const ActiveScans = () => {
                                 </div>
 
                                 {/* Info */}
-                                <div className="flex flex-wrap gap-4 text-xs text-slate-400">
+                                {/* Info row uses smaller gap on mobile to keep items from stacking too aggressively at ≤480px. */}
+                                <div className="flex flex-wrap gap-2 sm:gap-4 text-xs text-slate-400">
 
                                     <div>
                                         ⏱ {scan.startedAt

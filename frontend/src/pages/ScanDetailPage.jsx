@@ -93,19 +93,21 @@ const ScanDetailPage = () => {
     const vulnerabilities = report?.vulnerabilities || [];
 
     return (
-        <div className="p-6 md:p-10 bg-[#0f0f1a] min-h-screen text-white">
+        // Responsive padding: compact on mobile (≤480px), scales up for tablet and large desktop.
+        <div className="p-4 sm:p-6 md:p-8 lg:p-10 bg-[#0f0f1a] min-h-screen text-white">
 
             {/* Back */}
             <button
                 onClick={() => navigate(-1)}
-                className="flex items-center gap-2 text-slate-400 hover:text-white mb-6 text-sm transition"
+                className="flex items-center gap-2 text-slate-400 hover:text-white mb-4 sm:mb-6 text-sm transition"
             >
                 <ArrowLeft className="w-4 h-4" /> Back
             </button>
 
             {/* Header */}
-            <div className="flex flex-wrap items-center gap-3 mb-8">
-                <h1 className="text-2xl font-bold">{scan.filename}</h1>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-6 sm:mb-8">
+                {/* Prevent long filenames from overflowing the header bar on narrow mobile screens. */}
+                <h1 className="text-lg sm:text-2xl font-bold truncate max-w-full">{scan.filename}</h1>
                 <StatusBadge status={scan.status} />
                 <span className="text-xs px-2 py-0.5 rounded border border-indigo-500/30 bg-indigo-500/10 text-indigo-400 capitalize">
                     {scan.scanType}
@@ -116,31 +118,35 @@ const ScanDetailPage = () => {
             </div>
 
             {/* Meta row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            {/* 2-col on mobile/tablet, 4-col on desktop so each stat tile has enough width for its values. */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
                 {[
                     { label: "Duration", value: getDuration(scan.startedAt, scan.completedAt), icon: <Clock className="w-4 h-4 text-indigo-400" /> },
                     { label: "Started", value: scan.startedAt ? new Date(scan.startedAt).toLocaleString() : "—", icon: <Clock className="w-4 h-4 text-slate-400" /> },
                     { label: "Completed", value: scan.completedAt ? new Date(scan.completedAt).toLocaleString() : "—", icon: <CheckCircle className="w-4 h-4 text-green-400" /> },
                     { label: "Components", value: scan.componentCount ?? 0, icon: <Package className="w-4 h-4 text-purple-400" /> },
                 ].map(({ label, value, icon }) => (
-                    <div key={label} className="bg-[#13131f] border border-white/10 rounded-xl p-4">
+                    // Compact card padding on mobile; value may truncate on very small viewports to prevent overflow.
+                    <div key={label} className="bg-[#13131f] border border-white/10 rounded-xl p-3 sm:p-4">
                         <div className="flex items-center gap-2 text-xs text-slate-400 mb-1">{icon}{label}</div>
-                        <p className="text-sm font-semibold truncate">{value}</p>
+                        <p className="text-xs sm:text-sm font-semibold truncate">{value}</p>
                     </div>
                 ))}
             </div>
 
             {/* Severity breakdown */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            {/* 2-col on mobile so critical/high/medium/low cards are legible without tight squeezing at ≤480px. */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
                 {[
                     { label: "Critical", value: scan.vulnCritical, cls: "text-red-400 border-red-500/20 bg-red-500/5" },
                     { label: "High",     value: scan.vulnHigh,     cls: "text-orange-400 border-orange-500/20 bg-orange-500/5" },
                     { label: "Medium",   value: scan.vulnMedium,   cls: "text-yellow-400 border-yellow-500/20 bg-yellow-500/5" },
                     { label: "Low",      value: scan.vulnLow,      cls: "text-blue-400 border-blue-500/20 bg-blue-500/5" },
                 ].map(({ label, value, cls }) => (
-                    <div key={label} className={`border rounded-xl p-4 ${cls}`}>
+                    <div key={label} className={`border rounded-xl p-3 sm:p-4 ${cls}`}>
                         <p className="text-xs mb-1 opacity-70">{label}</p>
-                        <p className="text-2xl font-bold">{value ?? 0}</p>
+                        {/* Reduce severity count size on mobile so the number fits inside the small 2-col cell. */}
+                        <p className="text-xl sm:text-2xl font-bold">{value ?? 0}</p>
                     </div>
                 ))}
             </div>
@@ -180,28 +186,29 @@ const ScanDetailPage = () => {
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-sm">
                                         <thead>
+                                            {/* Tighter col padding allows all 5 vuln columns to fit without extra horizontal scroll on ≤768px. */}
                                             <tr className="border-b border-white/10 text-slate-400 text-xs">
-                                                <th className="text-left px-4 py-3">CVE</th>
-                                                <th className="text-left px-4 py-3">Severity</th>
-                                                <th className="text-left px-4 py-3">Package</th>
-                                                <th className="text-left px-4 py-3">Version</th>
-                                                <th className="text-left px-4 py-3">Fixed In</th>
+                                                <th className="text-left px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap">CVE</th>
+                                                <th className="text-left px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap">Severity</th>
+                                                <th className="text-left px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap">Package</th>
+                                                <th className="text-left px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap">Version</th>
+                                                <th className="text-left px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap">Fixed In</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {vulnerabilities.map((v, i) => (
                                                 <tr key={i} className="border-b border-white/5 hover:bg-white/3 transition">
-                                                    <td className="px-4 py-3 font-mono text-xs text-indigo-300">
+                                                    <td className="px-3 sm:px-4 py-2 sm:py-3 font-mono text-xs text-indigo-300">
                                                         {v.reference ? (
                                                             <a href={v.reference} target="_blank" rel="noreferrer" className="hover:underline">
                                                                 {v.cve || "—"}
                                                             </a>
                                                         ) : (v.cve || "—")}
                                                     </td>
-                                                    <td className="px-4 py-3"><SeverityBadge severity={v.severity} /></td>
-                                                    <td className="px-4 py-3 text-white">{v.package || "—"}</td>
-                                                    <td className="px-4 py-3 text-slate-400 font-mono text-xs">{v.version || "—"}</td>
-                                                    <td className="px-4 py-3 text-green-400 font-mono text-xs">{v.fixedVersion || "—"}</td>
+                                                    <td className="px-3 sm:px-4 py-2 sm:py-3"><SeverityBadge severity={v.severity} /></td>
+                                                    <td className="px-3 sm:px-4 py-2 sm:py-3 text-white">{v.package || "—"}</td>
+                                                    <td className="px-3 sm:px-4 py-2 sm:py-3 text-slate-400 font-mono text-xs">{v.version || "—"}</td>
+                                                    <td className="px-3 sm:px-4 py-2 sm:py-3 text-green-400 font-mono text-xs">{v.fixedVersion || "—"}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -227,20 +234,22 @@ const ScanDetailPage = () => {
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-sm">
                                         <thead>
+                                            {/* Compact column headers for components table to reduce horizontal overflow on tablet screens. */}
                                             <tr className="border-b border-white/10 text-slate-400 text-xs">
-                                                <th className="text-left px-4 py-3">Name</th>
-                                                <th className="text-left px-4 py-3">Version</th>
-                                                <th className="text-left px-4 py-3">Type</th>
-                                                <th className="text-left px-4 py-3">PURL</th>
+                                                <th className="text-left px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap">Name</th>
+                                                <th className="text-left px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap">Version</th>
+                                                <th className="text-left px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap">Type</th>
+                                                <th className="text-left px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap">PURL</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {components.map((c, i) => (
                                                 <tr key={i} className="border-b border-white/5 hover:bg-white/3 transition">
-                                                    <td className="px-4 py-3 font-medium text-white">{c.name}</td>
-                                                    <td className="px-4 py-3 text-slate-400 font-mono text-xs">{c.version || "—"}</td>
-                                                    <td className="px-4 py-3 text-slate-400 capitalize">{c.type || "—"}</td>
-                                                    <td className="px-4 py-3 text-indigo-300 font-mono text-xs truncate max-w-xs">{c.purl || "—"}</td>
+                                                    <td className="px-3 sm:px-4 py-2 sm:py-3 font-medium text-white whitespace-nowrap">{c.name}</td>
+                                                    <td className="px-3 sm:px-4 py-2 sm:py-3 text-slate-400 font-mono text-xs">{c.version || "—"}</td>
+                                                    <td className="px-3 sm:px-4 py-2 sm:py-3 text-slate-400 capitalize">{c.type || "—"}</td>
+                                                    {/* Truncate PURL strings to prevent table blowout; full value available via overflow-x-auto. */}
+                                                    <td className="px-3 sm:px-4 py-2 sm:py-3 text-indigo-300 font-mono text-xs truncate max-w-[120px] sm:max-w-xs">{c.purl || "—"}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
