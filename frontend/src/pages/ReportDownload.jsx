@@ -1,17 +1,11 @@
-﻿
-// // by mukesh bhai
-
 // import { useEffect, useState, useRef } from "react";
 // import { useParams, useNavigate } from "react-router-dom";
-// import {
-//     ArrowLeft, Shield, AlertTriangle, CheckCircle,
-//     Clock, Package, FileText, XCircle, Download
-// } from "lucide-react";
+// import { XCircle, CheckCircle, Clock, ArrowLeft, Download } from "lucide-react";
+// import API from "../api/auth";
 // import { jsPDF } from "jspdf";
 // import html2canvas from "html2canvas";
-// import API from "../api/auth";
 
-// // ── Severity badge ────────────────────────────────────────────────────────────
+
 // const SeverityBadge = ({ severity }) => {
 //     const map = {
 //         critical: "bg-red-500/20 text-red-400 border-red-500/30",
@@ -28,7 +22,7 @@
 //     );
 // };
 
-// // ── Status badge ──────────────────────────────────────────────────────────────
+
 // const StatusBadge = ({ status }) => {
 //     const map = {
 //         completed: { cls: "text-green-400 bg-green-500/10 border-green-500/30", icon: <CheckCircle className="w-3 h-3" /> },
@@ -44,17 +38,8 @@
 //     );
 // };
 
-// // ── Duration helper ───────────────────────────────────────────────────────────
-// const getDuration = (start, end) => {
-//     if (!start || !end) return "—";
-//     const diff = (new Date(end) - new Date(start)) / 1000;
-//     const m = Math.floor(diff / 60);
-//     const s = Math.floor(diff % 60);
-//     return `${m}m ${s}s`;
-// };
 
-// // ─────────────────────────────────────────────────────────────────────────────
-// const ScanDetailPage = () => {
+// const ReportDownload = () => {
 //     const { id } = useParams();
 //     const navigate = useNavigate();
 //     const [scan, setScan] = useState(null);
@@ -63,16 +48,24 @@
 //     const [pdfLoading, setPdfLoading] = useState(false);
 //     const reportRef = useRef();
 
-//     // ── Download PDF using jsPDF + html2canvas ──
+//     useEffect(() => {
+//         const fetchScan = async () => {
+//             try {
+//                 const res = await API.get(`/scans/${id}`);
+//                 setScan(res.data.data.scan);
+//             } catch (err) {
+//                 setError(err.response?.data?.message || "Failed to load scan.");
+//             } finally {
+//                 setLoading(false);
+//             }
+//         };
+//         fetchScan();
+//     }, [id]);
+
 //     const handleDownloadPDF = async () => {
 //         setPdfLoading(true);
 //         const element = reportRef.current;
 
-//         // Make the hidden report visible for html2canvas to capture
-//         const origStyle = element.getAttribute('style');
-//         element.style.cssText = 'position:fixed;left:0;top:0;width:794px;z-index:99999;opacity:0;pointer-events:none;';
-
-//         // Hex overrides for Tailwind v4 oklch() colors that html2canvas cannot parse
 //         const overrideStyle = document.createElement('style');
 //         overrideStyle.id = '__pdf_oklch_fix';
 //         overrideStyle.textContent = `
@@ -140,10 +133,8 @@
 //                 logging: false,
 //                 letterRendering: true,
 //                 backgroundColor: '#ffffff',
-//                 windowWidth: 794,
 //             });
 
-//             // A4 dimensions in mm
 //             const pageW = 210;
 //             const pageH = 297;
 //             const imgW = pageW;
@@ -154,38 +145,21 @@
 //             let remainingH = imgH;
 //             const imgData = canvas.toDataURL('image/jpeg', 0.95);
 
-//             // Paginate: slice the single tall image across A4 pages
 //             while (remainingH > 0) {
 //                 pdf.addImage(imgData, 'JPEG', 0, position, imgW, imgH);
 //                 remainingH -= pageH;
 //                 if (remainingH > 0) {
 //                     pdf.addPage();
-//                     position -= pageH; // shift image up for the next slice
+//                     position -= pageH;
 //                 }
 //             }
 
-//             pdf.save(`scan-report-${scan?._id || "report"}.pdf`);
+//             pdf.save(`SBOM_Report_${scan?._id || "report"}.pdf`);
 //         } finally {
-//             // Restore hidden state & clean up
-//             element.setAttribute('style', origStyle || '');
 //             overrideStyle.remove();
 //             setPdfLoading(false);
 //         }
 //     };
-
-//     useEffect(() => {
-//         const fetchScan = async () => {
-//             try {
-//                 const res = await API.get(`/scans/${id}`);
-//                 setScan(res.data.data.scan);
-//             } catch (err) {
-//                 setError(err.response?.data?.message || "Failed to load scan.");
-//             } finally {
-//                 setLoading(false);
-//             }
-//         };
-//         fetchScan();
-//     }, [id]);
 
 //     if (loading) {
 //         return (
@@ -211,7 +185,7 @@
 //     const now = new Date();
 //     const formatDate = (date) => new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
-//     // ── shared table style helpers (matches ReportDownload.jsx) ──
+//     // â”€â”€ shared table style helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //     const TH = "px-3 py-2 text-left text-xs font-semibold text-white bg-[#2b2bb2] border border-[#1f1f8a]";
 //     const TD = "px-3 py-2 text-xs text-gray-800 border border-gray-200";
 //     const TDalt = "px-3 py-2 text-xs text-gray-800 border border-gray-200 bg-gray-50";
@@ -224,191 +198,40 @@
 //     );
 
 //     return (
-//         <div className="p-6 md:p-10 bg-[#0f0f1a] min-h-screen text-white">
+//         <div className="bg-[#0f0f1a] min-h-screen text-white flex flex-col items-center py-6 px-2 sm:px-6">
+//             <div className="w-full max-w-5xl mx-auto">
 
-//             {/* Back */}
-//             <button
-//                 onClick={() => navigate(-1)}
-//                 className="flex items-center gap-2 text-slate-400 hover:text-white mb-6 text-sm transition"
-//             >
-//                 <ArrowLeft className="w-4 h-4" /> Back
-//             </button>
-
-//             {/* Header */}
-//             <div className="flex flex-wrap items-center gap-3 mb-8">
-//                 <h1 className="text-2xl font-bold">{scan.filename}</h1>
-//                 <StatusBadge status={scan.status} />
-//                 <span className="text-xs px-2 py-0.5 rounded border border-indigo-500/30 bg-indigo-500/10 text-indigo-400 capitalize">
-//                     {scan.scanType}
-//                 </span>
-//                 <span className="text-xs px-2 py-0.5 rounded border border-purple-500/30 bg-purple-500/10 text-purple-400 uppercase">
-//                     CycloneDX
-//                 </span>
-//                 {/* ── Download Report button ── */}
-//                 <button
-//                     onClick={handleDownloadPDF}
-//                     disabled={pdfLoading}
-//                     className="ml-auto flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm font-semibold shadow transition"
-//                 >
-//                     {pdfLoading ? (
-//                         <>
-//                             <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
-//                             Generating...
-//                         </>
-//                     ) : (
-//                         <>
-//                             <Download className="w-4 h-4" />
-//                             Download Report
-//                         </>
-//                     )}
-//                 </button>
-//             </div>
-
-//             {/* Meta row */}
-//             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-//                 {[
-//                     { label: "Duration", value: getDuration(scan.startedAt, scan.completedAt), icon: <Clock className="w-4 h-4 text-indigo-400" /> },
-//                     { label: "Started", value: scan.startedAt ? new Date(scan.startedAt).toLocaleString() : "—", icon: <Clock className="w-4 h-4 text-slate-400" /> },
-//                     { label: "Completed", value: scan.completedAt ? new Date(scan.completedAt).toLocaleString() : "—", icon: <CheckCircle className="w-4 h-4 text-green-400" /> },
-//                     { label: "Components", value: scan.componentCount ?? 0, icon: <Package className="w-4 h-4 text-purple-400" /> },
-//                 ].map(({ label, value, icon }) => (
-//                     <div key={label} className="bg-[#13131f] border border-white/10 rounded-xl p-4">
-//                         <div className="flex items-center gap-2 text-xs text-slate-400 mb-1">{icon}{label}</div>
-//                         <p className="text-sm font-semibold truncate">{value}</p>
-//                     </div>
-//                 ))}
-//             </div>
-
-//             {/* Severity breakdown */}
-//             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-//                 {[
-//                     { label: "Critical", value: scan.vulnCritical, cls: "text-red-400 border-red-500/20 bg-red-500/5" },
-//                     { label: "High",     value: scan.vulnHigh,     cls: "text-orange-400 border-orange-500/20 bg-orange-500/5" },
-//                     { label: "Medium",   value: scan.vulnMedium,   cls: "text-yellow-400 border-yellow-500/20 bg-yellow-500/5" },
-//                     { label: "Low",      value: scan.vulnLow,      cls: "text-blue-400 border-blue-500/20 bg-blue-500/5" },
-//                 ].map(({ label, value, cls }) => (
-//                     <div key={label} className={`border rounded-xl p-4 ${cls}`}>
-//                         <p className="text-xs mb-1 opacity-70">{label}</p>
-//                         <p className="text-2xl font-bold">{value ?? 0}</p>
-//                     </div>
-//                 ))}
-//             </div>
-
-//             {/* Failed error */}
-//             {scan.status === "failed" && scan.errorMessage && (
-//                 <div className="mb-8 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
-//                     <p className="text-red-400 text-sm font-medium mb-1 flex items-center gap-2">
-//                         <XCircle className="w-4 h-4" /> Scan Error
-//                     </p>
-//                     <pre className="text-xs text-red-300 whitespace-pre-wrap break-all">{scan.errorMessage}</pre>
-//                 </div>
-//             )}
-
-//             {/* No report yet */}
-//             {!report && scan.status === "completed" && (
-//                 <div className="mb-8 bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 text-yellow-400 text-sm">
-//                     Report is still being processed. Refresh in a moment.
-//                 </div>
-//             )}
-
-//             {report && (
-//                 <>
-//                     {/* Vulnerabilities table */}
-//                     <div className="mb-8">
-//                         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-//                             <AlertTriangle className="w-5 h-5 text-red-400" />
-//                             Vulnerabilities ({vulnerabilities.length})
-//                         </h2>
-
-//                         {vulnerabilities.length === 0 ? (
-//                             <div className="bg-[#13131f] border border-white/10 rounded-xl p-6 text-center text-slate-400 text-sm">
-//                                 No vulnerabilities found 🎉
-//                             </div>
+//                 {/* â”€â”€ Top controls â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+//                 <div className="flex items-center justify-between mb-4">
+//                     <button
+//                         onClick={() => navigate(-1)}
+//                         className="flex items-center gap-2 text-slate-400 hover:text-white text-sm transition"
+//                     >
+//                         <ArrowLeft className="w-4 h-4" />
+//                         Back
+//                     </button>
+//                     <button
+//                         onClick={handleDownloadPDF}
+//                         disabled={pdfLoading}
+//                         className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-semibold shadow transition"
+//                     >
+//                         {pdfLoading ? (
+//                             <>
+//                                 <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
+//                                 Generating...
+//                             </>
 //                         ) : (
-//                             <div className="bg-[#13131f] border border-white/10 rounded-xl overflow-hidden">
-//                                 <div className="overflow-x-auto">
-//                                     <table className="w-full text-sm">
-//                                         <thead>
-//                                             <tr className="border-b border-white/10 text-slate-400 text-xs">
-//                                                 <th className="text-left px-4 py-3">CVE</th>
-//                                                 <th className="text-left px-4 py-3">Severity</th>
-//                                                 <th className="text-left px-4 py-3">Package</th>
-//                                                 <th className="text-left px-4 py-3">Version</th>
-//                                                 <th className="text-left px-4 py-3">Fixed In</th>
-//                                             </tr>
-//                                         </thead>
-//                                         <tbody>
-//                                             {vulnerabilities.map((v, i) => (
-//                                                 <tr key={i} className="border-b border-white/5 hover:bg-white/3 transition">
-//                                                     <td className="px-4 py-3 font-mono text-xs text-indigo-300">
-//                                                         {v.reference ? (
-//                                                             <a href={v.reference} target="_blank" rel="noreferrer" className="hover:underline">
-//                                                                 {v.cve || "—"}
-//                                                             </a>
-//                                                         ) : (v.cve || "—")}
-//                                                     </td>
-//                                                     <td className="px-4 py-3"><SeverityBadge severity={v.severity} /></td>
-//                                                     <td className="px-4 py-3 text-white">{v.package || "—"}</td>
-//                                                     <td className="px-4 py-3 text-slate-400 font-mono text-xs">{v.version || "—"}</td>
-//                                                     <td className="px-4 py-3 text-green-400 font-mono text-xs">{v.fixedVersion || "—"}</td>
-//                                                 </tr>
-//                                             ))}
-//                                         </tbody>
-//                                     </table>
-//                                 </div>
-//                             </div>
+//                             <>
+//                                 <Download className="w-4 h-4" />
+//                                 Download PDF
+//                             </>
 //                         )}
-//                     </div>
+//                     </button>
+//                 </div>
 
-//                     {/* Components table */}
-//                     <div>
-//                         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-//                             <Package className="w-5 h-5 text-purple-400" />
-//                             Components ({components.length})
-//                         </h2>
+//                 {/* â”€â”€ REPORT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+//                 <div ref={reportRef} className="bg-white text-black rounded-xl shadow font-sans">
 
-//                         {components.length === 0 ? (
-//                             <div className="bg-[#13131f] border border-white/10 rounded-xl p-6 text-center text-slate-400 text-sm">
-//                                 No components found.
-//                             </div>
-//                         ) : (
-//                             <div className="bg-[#13131f] border border-white/10 rounded-xl overflow-hidden">
-//                                 <div className="overflow-x-auto">
-//                                     <table className="w-full text-sm">
-//                                         <thead>
-//                                             <tr className="border-b border-white/10 text-slate-400 text-xs">
-//                                                 <th className="text-left px-4 py-3">Name</th>
-//                                                 <th className="text-left px-4 py-3">Version</th>
-//                                                 <th className="text-left px-4 py-3">Type</th>
-//                                                 <th className="text-left px-4 py-3">PURL</th>
-//                                             </tr>
-//                                         </thead>
-//                                         <tbody>
-//                                             {components.map((c, i) => (
-//                                                 <tr key={i} className="border-b border-white/5 hover:bg-white/3 transition">
-//                                                     <td className="px-4 py-3 font-medium text-white">{c.name}</td>
-//                                                     <td className="px-4 py-3 text-slate-400 font-mono text-xs">{c.version || "—"}</td>
-//                                                     <td className="px-4 py-3 text-slate-400 capitalize">{c.type || "—"}</td>
-//                                                     <td className="px-4 py-3 text-indigo-300 font-mono text-xs truncate max-w-xs">{c.purl || "—"}</td>
-//                                                 </tr>
-//                                             ))}
-//                                         </tbody>
-//                                     </table>
-//                                 </div>
-//                             </div>
-//                         )}
-//                     </div>
-//                 </>
-//             )}
-
-//             {/* ── Hidden white-paper report (ReportDownload format) captured by jsPDF + html2canvas ── */}
-//             {scan && (
-//                 <div
-//                     ref={reportRef}
-//                     data-pdf-report
-//                     className="bg-white text-black font-sans"
-//                     style={{ position: "absolute", left: "-9999px", top: 0, width: "794px" }}
-//                 >
 //                     {/* 1. COVER PAGE */}
 //                     <div className="relative flex flex-col p-12 min-h-[90vh] overflow-hidden" style={{ pageBreakAfter: 'always' }}>
 //                         <div className="absolute left-0 top-0 h-full w-2 bg-[#2b2bb2]" />
@@ -479,18 +302,18 @@
 //                             </thead>
 //                             <tbody>
 //                                 {[
-//                                     ["Document Title",   "SBOM & CBOM Analysis Report — v1.0"],
-//                                     ["Document Version", "v — 1.0"],
-//                                     ["Report Type",      "SBOM + CBOM"],
-//                                     ["Classification",   "Confidential"],
-//                                     ["Prepared By",      "RNT Infosec LLP — Automated BOM Analysis Engine"],
-//                                     ["Prepared For",     scan.organization || "—"],
-//                                     ["Scan File",        scan.filename || "—"],
-//                                     ["Scan ID",          scan._id || "—"],
-//                                     ["Scan Started",     scan.startedAt ? formatDate(scan.startedAt) : "—"],
-//                                     ["Scan Completed",   scan.completedAt ? formatDate(scan.completedAt) : "—"],
-//                                     ["Format",           scan.format || "CycloneDX"],
-//                                     ["Status",           scan.status || "—"],
+//                                     ["Document Title",    "SBOM & CBOM Analysis Report — v1.0"],
+//                                     ["Document Version",  "v — 1.0"],
+//                                     ["Report Type",       "SBOM + CBOM"],
+//                                     ["Classification",    "Confidential"],
+//                                     ["Prepared By",       "RNT Infosec LLP — Automated BOM Analysis Engine"],
+//                                     ["Prepared For",      scan.organization || "—"],
+//                                     ["Scan File",         scan.filename || "—"],
+//                                     ["Scan ID",           scan._id || "—"],
+//                                     ["Scan Started",      scan.startedAt ? formatDate(scan.startedAt) : "—"],
+//                                     ["Scan Completed",    scan.completedAt ? formatDate(scan.completedAt) : "—"],
+//                                     ["Format",            scan.format || "CycloneDX"],
+//                                     ["Status",            scan.status || "—"],
 //                                 ].map(([field, value], i) => (
 //                                     <tr key={i}>
 //                                         <td className={`${i % 2 === 0 ? TD : TDalt} font-semibold text-[#2b2bb2]`}>{field}</td>
@@ -516,12 +339,12 @@
 //                             </thead>
 //                             <tbody>
 //                                 {[
-//                                     ["Dependency Mapping",           "Identifies every direct and transitive package used in the project."],
-//                                     ["Vulnerability Correlation",    "Correlates components against CVE, NVD, and vendor advisory feeds."],
-//                                     ["License Compliance",           "Flags components with restrictive or incompatible license terms."],
+//                                     ["Dependency Mapping",        "Identifies every direct and transitive package used in the project."],
+//                                     ["Vulnerability Correlation", "Correlates components against CVE, NVD, and vendor advisory feeds."],
+//                                     ["License Compliance",        "Flags components with restrictive or incompatible license terms."],
 //                                     ["Outdated Component Detection", "Highlights packages with available security patches."],
-//                                     ["Exploit Tracking",             "Identifies components with known public exploits (EPSS / CISA KEV)."],
-//                                     ["CBOM Analysis",                "Maps cryptographic primitives and cipher usage within source code."],
+//                                     ["Exploit Tracking",          "Identifies components with known public exploits (EPSS / CISA KEV)."],
+//                                     ["CBOM Analysis",             "Maps cryptographic primitives and cipher usage within source code."],
 //                                 ].map(([cap, desc], i) => (
 //                                     <tr key={i}>
 //                                         <td className={`${i % 2 === 0 ? TD : TDalt} font-semibold`}>{cap}</td>
@@ -552,12 +375,12 @@
 //                             </thead>
 //                             <tbody>
 //                                 {[
-//                                     ["Vulnerable Dependencies", "Remote code execution, data exfiltration",     "Critical"],
-//                                     ["Outdated Libraries",      "Exposure to known unpatched CVEs",             "High"],
-//                                     ["Transitive Risks",        "Indirect vulnerabilities via nested packages", "High"],
-//                                     ["License Violations",      "Legal and compliance exposure",                "Medium"],
-//                                     ["Cryptographic Weaknesses","Weak cipher suites, deprecated algorithms",    "Medium"],
-//                                     ["Configuration Exposure",  "Hardcoded secrets, insecure defaults",         "High"],
+//                                     ["Vulnerable Dependencies",  "Remote code execution, data exfiltration",     "Critical"],
+//                                     ["Outdated Libraries",        "Exposure to known unpatched CVEs",             "High"],
+//                                     ["Transitive Risks",          "Indirect vulnerabilities via nested packages", "High"],
+//                                     ["License Violations",        "Legal and compliance exposure",                "Medium"],
+//                                     ["Cryptographic Weaknesses",  "Weak cipher suites, deprecated algorithms",   "Medium"],
+//                                     ["Configuration Exposure",    "Hardcoded secrets, insecure defaults",         "High"],
 //                                 ].map(([cat, impact, prio], i) => (
 //                                     <tr key={i}>
 //                                         <td className={`${i % 2 === 0 ? TD : TDalt} font-semibold`}>{cat}</td>
@@ -579,6 +402,7 @@
 //                         <p className="text-gray-700 text-sm leading-relaxed mb-6">
 //                             This assessment provides a point-in-time view of the project's dependency risks and internal code exposures. The scan identifies vulnerable components, outdated packages, security-sensitive files, and configuration issues requiring remediation.
 //                         </p>
+
 //                         <h3 className="text-sm font-bold text-[#2b2bb2] uppercase tracking-wide mb-2">Scan Metadata</h3>
 //                         <table className="w-full border-collapse border border-gray-300 text-sm mb-6">
 //                             <thead>
@@ -607,6 +431,7 @@
 //                                 ))}
 //                             </tbody>
 //                         </table>
+
 //                         <h3 className="text-sm font-bold text-[#2b2bb2] uppercase tracking-wide mb-2">Component Summary</h3>
 //                         <table className="w-full border-collapse border border-gray-300 text-sm mb-6">
 //                             <thead>
@@ -617,10 +442,10 @@
 //                             </thead>
 //                             <tbody>
 //                                 {[
-//                                     ["Total Components",         components.length],
-//                                     ["Vulnerable Components",    components.filter(c => c.vulnerable).length],
-//                                     ["Outdated Libraries",       components.filter(c => c.outdated).length],
-//                                     ["Components with Exploits", components.filter(c => c.exploit).length],
+//                                     ["Total Components",            components.length],
+//                                     ["Vulnerable Components",       components.filter(c => c.vulnerable).length],
+//                                     ["Outdated Libraries",          components.filter(c => c.outdated).length],
+//                                     ["Components with Exploits",    components.filter(c => c.exploit).length],
 //                                 ].map(([metric, count], i) => (
 //                                     <tr key={i}>
 //                                         <td className={i % 2 === 0 ? TD : TDalt}>{metric}</td>
@@ -629,6 +454,7 @@
 //                                 ))}
 //                             </tbody>
 //                         </table>
+
 //                         <h3 className="text-sm font-bold text-[#2b2bb2] uppercase tracking-wide mb-2">Vulnerability Severity Breakdown</h3>
 //                         <table className="w-full border-collapse border border-gray-300 text-sm">
 //                             <thead>
@@ -640,10 +466,10 @@
 //                             </thead>
 //                             <tbody>
 //                                 {[
-//                                     ["Critical", vulnerabilities.filter(v => v.severity === "critical").length, "Immediate exploitation risk; patch or isolate urgently.",     "text-red-600    bg-red-50"],
-//                                     ["High",     vulnerabilities.filter(v => v.severity === "high").length,     "High-impact vulnerabilities requiring prompt remediation.",   "text-orange-600 bg-orange-50"],
-//                                     ["Medium",   vulnerabilities.filter(v => v.severity === "medium").length,   "Notable risk; address within standard patch cycle.",           "text-yellow-700 bg-yellow-50"],
-//                                     ["Low",      vulnerabilities.filter(v => v.severity === "low").length,      "Minimal risk; address in next scheduled maintenance.",         "text-blue-600   bg-blue-50"],
+//                                     ["Critical", vulnerabilities.filter(v => v.severity === "critical").length, "Immediate exploitation risk; patch or isolate urgently.",          "text-red-600    bg-red-50"],
+//                                     ["High",     vulnerabilities.filter(v => v.severity === "high").length,     "High-impact vulnerabilities requiring prompt remediation.",        "text-orange-600 bg-orange-50"],
+//                                     ["Medium",   vulnerabilities.filter(v => v.severity === "medium").length,   "Notable risk; address within standard patch cycle.",               "text-yellow-700 bg-yellow-50"],
+//                                     ["Low",      vulnerabilities.filter(v => v.severity === "low").length,      "Minimal risk; address in next scheduled maintenance.",             "text-blue-600   bg-blue-50"],
 //                                 ].map(([sev, count, desc, cls]) => (
 //                                     <tr key={sev}>
 //                                         <td className={`${TD} font-bold ${cls}`}>{sev}</td>
@@ -672,13 +498,13 @@
 //                             </thead>
 //                             <tbody>
 //                                 {[
-//                                     ["1", "Ingestion",            "Parse uploaded package manifest or SBOM file.",                  "CycloneDX / SPDX"],
-//                                     ["2", "Component Extraction", "Extract all direct and transitive dependency metadata.",          "BOM Engine"],
-//                                     ["3", "Vulnerability Lookup", "Cross-reference components against CVE / NVD / OSV databases.",  "NVD, OSV, GHSA"],
-//                                     ["4", "Exploit Mapping",      "Check for known public exploits via EPSS and CISA KEV.",         "CISA KEV, EPSS"],
-//                                     ["5", "Outdated Detection",   "Compare installed versions against latest stable releases.",     "Package Registries"],
-//                                     ["6", "CBOM Analysis",        "Identify cryptographic algorithm usage in the source tree.",     "Static Analysis"],
-//                                     ["7", "Report Generation",    "Compile findings into structured SBOM + CBOM report.",           "Internal Engine"],
+//                                     ["1", "Ingestion",            "Parse uploaded package manifest or SBOM file.",                 "CycloneDX / SPDX"],
+//                                     ["2", "Component Extraction", "Extract all direct and transitive dependency metadata.",         "BOM Engine"],
+//                                     ["3", "Vulnerability Lookup", "Cross-reference components against CVE / NVD / OSV databases.", "NVD, OSV, GHSA"],
+//                                     ["4", "Exploit Mapping",      "Check for known public exploits via EPSS and CISA KEV.",        "CISA KEV, EPSS"],
+//                                     ["5", "Outdated Detection",   "Compare installed versions against latest stable releases.",    "Package Registries"],
+//                                     ["6", "CBOM Analysis",        "Identify cryptographic algorithm usage in the source tree.",    "Static Analysis"],
+//                                     ["7", "Report Generation",   "Compile findings into structured SBOM + CBOM report.",          "Internal Engine"],
 //                                 ].map(([phase, activity, desc, tool], i) => (
 //                                     <tr key={i}>
 //                                         <td className={`${i % 2 === 0 ? TD : TDalt} text-center font-bold text-[#2b2bb2]`}>{phase}</td>
@@ -741,6 +567,7 @@
 //                                 </table>
 //                             </div>
 //                         )}
+
 //                     </div>
 
 //                     {/* 9. TECHNICAL SUMMARY – Components */}
@@ -814,21 +641,14 @@
 //                         </p>
 //                         <p className="mt-6 text-xs text-gray-400">+91 9211770600 &nbsp;|&nbsp; www.rntinfosec.in &nbsp;|&nbsp; project@rntinfosec.in</p>
 //                     </div>
+
 //                 </div>
-//             )}
+//             </div>
 //         </div>
 //     );
 // };
 
-// export default ScanDetailPage;
-
-
-
-
-
-
-
-// scanDetails jsx file 
+// export default ReportDownload;
 
 
 
@@ -838,23 +658,23 @@
 
 
 
+//ReportDownload 
 
 
 
-// by mukesh bhai
+
+
+
 
 
 
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-    ArrowLeft, Shield, AlertTriangle, CheckCircle,
-    Clock, Package, FileText, XCircle, Download
-} from "lucide-react";
-import html2pdf from "html2pdf.js";
+import { XCircle, CheckCircle, Clock, ArrowLeft, Download } from "lucide-react";
 import API from "../api/auth";
+import html2pdf from "html2pdf.js";
 
-// ── Severity badge ────────────────────────────────────────────────────────────
+
 const SeverityBadge = ({ severity }) => {
     const map = {
         critical: "bg-red-500/20 text-red-400 border-red-500/30",
@@ -871,7 +691,7 @@ const SeverityBadge = ({ severity }) => {
     );
 };
 
-// ── Status badge ──────────────────────────────────────────────────────────────
+
 const StatusBadge = ({ status }) => {
     const map = {
         completed: { cls: "text-green-400 bg-green-500/10 border-green-500/30", icon: <CheckCircle className="w-3 h-3" /> },
@@ -887,17 +707,8 @@ const StatusBadge = ({ status }) => {
     );
 };
 
-// ── Duration helper ───────────────────────────────────────────────────────────
-const getDuration = (start, end) => {
-    if (!start || !end) return "—";
-    const diff = (new Date(end) - new Date(start)) / 1000;
-    const m = Math.floor(diff / 60);
-    const s = Math.floor(diff % 60);
-    return `${m}m ${s}s`;
-};
 
-// ─────────────────────────────────────────────────────────────────────────────
-const ScanDetailPage = () => {
+const ReportDownload = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [scan, setScan] = useState(null);
@@ -906,13 +717,26 @@ const ScanDetailPage = () => {
     const [pdfLoading, setPdfLoading] = useState(false);
     const reportRef = useRef();
 
-    // ── Download PDF using ReportDownload format + open in new tab ──
+    useEffect(() => {
+        const fetchScan = async () => {
+            try {
+                const res = await API.get(`/scans/${id}`);
+                setScan(res.data.data.scan);
+            } catch (err) {
+                setError(err.response?.data?.message || "Failed to load scan.");
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchScan();
+    }, [id]);
+
     const handleDownloadPDF = async () => {
         setPdfLoading(true);
         const element = reportRef.current;
         // html2canvas cannot parse Tailwind v4 oklch() color functions.
-        // onclone injects hex overrides for all Tailwind color CSS variables
-        // into the cloned document so html2canvas never encounters oklch.
+        // onclone injects hex overrides into the cloned document so
+        // html2canvas never encounters oklch, preventing the empty-PDF crash.
         const oklchOverride = `
             :root {
                 --color-white:#ffffff; --color-black:#000000;
@@ -977,30 +801,11 @@ const ScanDetailPage = () => {
             pagebreak: { mode: ['css', 'legacy'] }
         };
         try {
-            const pdfInstance = await html2pdf().set(opt).from(element).toPdf().get("pdf");
-            // Open rendered PDF in new tab
-            const blobUrl = pdfInstance.output("bloburl");
-            window.open(blobUrl, "_blank");
-            // Also trigger download
-            pdfInstance.save(opt.filename);
+            await html2pdf().set(opt).from(element).save();
         } finally {
             setPdfLoading(false);
         }
     };
-
-    useEffect(() => {
-        const fetchScan = async () => {
-            try {
-                const res = await API.get(`/scans/${id}`);
-                setScan(res.data.data.scan);
-            } catch (err) {
-                setError(err.response?.data?.message || "Failed to load scan.");
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchScan();
-    }, [id]);
 
     if (loading) {
         return (
@@ -1026,7 +831,7 @@ const ScanDetailPage = () => {
     const now = new Date();
     const formatDate = (date) => new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
-    // ── shared table style helpers (matches ReportDownload.jsx) ──
+    // â”€â”€ shared table style helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const TH = "px-3 py-2 text-left text-xs font-semibold text-white bg-[#2b2bb2] border border-[#1f1f8a]";
     const TD = "px-3 py-2 text-xs text-gray-800 border border-gray-200";
     const TDalt = "px-3 py-2 text-xs text-gray-800 border border-gray-200 bg-gray-50";
@@ -1039,180 +844,40 @@ const ScanDetailPage = () => {
     );
 
     return (
-        <div className="p-6 md:p-10 bg-[#0f0f1a] min-h-screen text-white">
+        <div className="bg-[#0f0f1a] min-h-screen text-white flex flex-col items-center py-6 px-2 sm:px-6">
+            <div className="w-full max-w-5xl mx-auto">
 
-            {/* Back */}
-            <button
-                onClick={() => navigate(-1)}
-                className="flex items-center gap-2 text-slate-400 hover:text-white mb-6 text-sm transition"
-            >
-                <ArrowLeft className="w-4 h-4" /> Back
-            </button>
-
-            {/* Header */}
-            <div className="flex flex-wrap items-center gap-3 mb-8">
-                <h1 className="text-2xl font-bold">{scan.filename}</h1>
-                <StatusBadge status={scan.status} />
-                <span className="text-xs px-2 py-0.5 rounded border border-indigo-500/30 bg-indigo-500/10 text-indigo-400 capitalize">
-                    {scan.scanType}
-                </span>
-                <span className="text-xs px-2 py-0.5 rounded border border-purple-500/30 bg-purple-500/10 text-purple-400 uppercase">
-                    CycloneDX
-                </span>
-                {/* ── Download Report button ── */}
-                <button
-                    onClick={() => navigate(`/scans/${id}/report`)}
-                    className="ml-auto flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow transition"
-                >
-                    <Download className="w-4 h-4" />
-                    Download Report
-                </button>
-            </div>
-
-            {/* Meta row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                {[
-                    { label: "Duration", value: getDuration(scan.startedAt, scan.completedAt), icon: <Clock className="w-4 h-4 text-indigo-400" /> },
-                    { label: "Started", value: scan.startedAt ? new Date(scan.startedAt).toLocaleString() : "—", icon: <Clock className="w-4 h-4 text-slate-400" /> },
-                    { label: "Completed", value: scan.completedAt ? new Date(scan.completedAt).toLocaleString() : "—", icon: <CheckCircle className="w-4 h-4 text-green-400" /> },
-                    { label: "Components", value: scan.componentCount ?? 0, icon: <Package className="w-4 h-4 text-purple-400" /> },
-                ].map(({ label, value, icon }) => (
-                    <div key={label} className="bg-[#13131f] border border-white/10 rounded-xl p-4">
-                        <div className="flex items-center gap-2 text-xs text-slate-400 mb-1">{icon}{label}</div>
-                        <p className="text-sm font-semibold truncate">{value}</p>
-                    </div>
-                ))}
-            </div>
-
-            {/* Severity breakdown */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                {[
-                    { label: "Critical", value: scan.vulnCritical, cls: "text-red-400 border-red-500/20 bg-red-500/5" },
-                    { label: "High",     value: scan.vulnHigh,     cls: "text-orange-400 border-orange-500/20 bg-orange-500/5" },
-                    { label: "Medium",   value: scan.vulnMedium,   cls: "text-yellow-400 border-yellow-500/20 bg-yellow-500/5" },
-                    { label: "Low",      value: scan.vulnLow,      cls: "text-blue-400 border-blue-500/20 bg-blue-500/5" },
-                ].map(({ label, value, cls }) => (
-                    <div key={label} className={`border rounded-xl p-4 ${cls}`}>
-                        <p className="text-xs mb-1 opacity-70">{label}</p>
-                        <p className="text-2xl font-bold">{value ?? 0}</p>
-                    </div>
-                ))}
-            </div>
-
-            {/* Failed error */}
-            {scan.status === "failed" && scan.errorMessage && (
-                <div className="mb-8 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
-                    <p className="text-red-400 text-sm font-medium mb-1 flex items-center gap-2">
-                        <XCircle className="w-4 h-4" /> Scan Error
-                    </p>
-                    <pre className="text-xs text-red-300 whitespace-pre-wrap break-all">{scan.errorMessage}</pre>
-                </div>
-            )}
-
-            {/* No report yet */}
-            {!report && scan.status === "completed" && (
-                <div className="mb-8 bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 text-yellow-400 text-sm">
-                    Report is still being processed. Refresh in a moment.
-                </div>
-            )}
-
-            {report && (
-                <>
-                    {/* Vulnerabilities table */}
-                    <div className="mb-8">
-                        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                            <AlertTriangle className="w-5 h-5 text-red-400" />
-                            Vulnerabilities ({vulnerabilities.length})
-                        </h2>
-
-                        {vulnerabilities.length === 0 ? (
-                            <div className="bg-[#13131f] border border-white/10 rounded-xl p-6 text-center text-slate-400 text-sm">
-                                No vulnerabilities found 🎉
-                            </div>
+                {/* â”€â”€ Top controls â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+                <div className="flex items-center justify-between mb-4">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="flex items-center gap-2 text-slate-400 hover:text-white text-sm transition"
+                    >
+                        <ArrowLeft className="w-4 h-4" />
+                        Back
+                    </button>
+                    <button
+                        onClick={handleDownloadPDF}
+                        disabled={pdfLoading}
+                        className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-semibold shadow transition"
+                    >
+                        {pdfLoading ? (
+                            <>
+                                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
+                                Generating...
+                            </>
                         ) : (
-                            <div className="bg-[#13131f] border border-white/10 rounded-xl overflow-hidden">
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-sm">
-                                        <thead>
-                                            <tr className="border-b border-white/10 text-slate-400 text-xs">
-                                                <th className="text-left px-4 py-3">CVE</th>
-                                                <th className="text-left px-4 py-3">Severity</th>
-                                                <th className="text-left px-4 py-3">Package</th>
-                                                <th className="text-left px-4 py-3">Version</th>
-                                                <th className="text-left px-4 py-3">Fixed In</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {vulnerabilities.map((v, i) => (
-                                                <tr key={i} className="border-b border-white/5 hover:bg-white/3 transition">
-                                                    <td className="px-4 py-3 font-mono text-xs text-indigo-300">
-                                                        {v.reference ? (
-                                                            <a href={v.reference} target="_blank" rel="noreferrer" className="hover:underline">
-                                                                {v.cve || "—"}
-                                                            </a>
-                                                        ) : (v.cve || "—")}
-                                                    </td>
-                                                    <td className="px-4 py-3"><SeverityBadge severity={v.severity} /></td>
-                                                    <td className="px-4 py-3 text-white">{v.package || "—"}</td>
-                                                    <td className="px-4 py-3 text-slate-400 font-mono text-xs">{v.version || "—"}</td>
-                                                    <td className="px-4 py-3 text-green-400 font-mono text-xs">{v.fixedVersion || "—"}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+                            <>
+                                <Download className="w-4 h-4" />
+                                Download PDF
+                            </>
                         )}
-                    </div>
+                    </button>
+                </div>
 
-                    {/* Components table */}
-                    <div>
-                        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                            <Package className="w-5 h-5 text-purple-400" />
-                            Components ({components.length})
-                        </h2>
+                {/* â”€â”€ REPORT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+                <div ref={reportRef} className="bg-white text-black rounded-xl shadow font-sans">
 
-                        {components.length === 0 ? (
-                            <div className="bg-[#13131f] border border-white/10 rounded-xl p-6 text-center text-slate-400 text-sm">
-                                No components found.
-                            </div>
-                        ) : (
-                            <div className="bg-[#13131f] border border-white/10 rounded-xl overflow-hidden">
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-sm">
-                                        <thead>
-                                            <tr className="border-b border-white/10 text-slate-400 text-xs">
-                                                <th className="text-left px-4 py-3">Name</th>
-                                                <th className="text-left px-4 py-3">Version</th>
-                                                <th className="text-left px-4 py-3">Type</th>
-                                                <th className="text-left px-4 py-3">PURL</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {components.map((c, i) => (
-                                                <tr key={i} className="border-b border-white/5 hover:bg-white/3 transition">
-                                                    <td className="px-4 py-3 font-medium text-white">{c.name}</td>
-                                                    <td className="px-4 py-3 text-slate-400 font-mono text-xs">{c.version || "—"}</td>
-                                                    <td className="px-4 py-3 text-slate-400 capitalize">{c.type || "—"}</td>
-                                                    <td className="px-4 py-3 text-indigo-300 font-mono text-xs truncate max-w-xs">{c.purl || "—"}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </>
-            )}
-
-            {/* ── Hidden white-paper report (ReportDownload format) captured by html2pdf ── */}
-            {scan && (
-                <div
-                    ref={reportRef}
-                    className="bg-white text-black font-sans"
-                    style={{ position: "absolute", left: "-9999px", top: 0, width: "794px" }}
-                >
                     {/* 1. COVER PAGE */}
                     <div className="relative flex flex-col p-12 min-h-[90vh] overflow-hidden" style={{ pageBreakAfter: 'always' }}>
                         <div className="absolute left-0 top-0 h-full w-2 bg-[#2b2bb2]" />
@@ -1283,18 +948,18 @@ const ScanDetailPage = () => {
                             </thead>
                             <tbody>
                                 {[
-                                    ["Document Title",   "SBOM & CBOM Analysis Report — v1.0"],
-                                    ["Document Version", "v — 1.0"],
-                                    ["Report Type",      "SBOM + CBOM"],
-                                    ["Classification",   "Confidential"],
-                                    ["Prepared By",      "RNT Infosec LLP — Automated BOM Analysis Engine"],
-                                    ["Prepared For",     scan.organization || "—"],
-                                    ["Scan File",        scan.filename || "—"],
-                                    ["Scan ID",          scan._id || "—"],
-                                    ["Scan Started",     scan.startedAt ? formatDate(scan.startedAt) : "—"],
-                                    ["Scan Completed",   scan.completedAt ? formatDate(scan.completedAt) : "—"],
-                                    ["Format",           scan.format || "CycloneDX"],
-                                    ["Status",           scan.status || "—"],
+                                    ["Document Title",    "SBOM & CBOM Analysis Report — v1.0"],
+                                    ["Document Version",  "v — 1.0"],
+                                    ["Report Type",       "SBOM + CBOM"],
+                                    ["Classification",    "Confidential"],
+                                    ["Prepared By",       "RNT Infosec LLP — Automated BOM Analysis Engine"],
+                                    ["Prepared For",      scan.organization || "—"],
+                                    ["Scan File",         scan.filename || "—"],
+                                    ["Scan ID",           scan._id || "—"],
+                                    ["Scan Started",      scan.startedAt ? formatDate(scan.startedAt) : "—"],
+                                    ["Scan Completed",    scan.completedAt ? formatDate(scan.completedAt) : "—"],
+                                    ["Format",            scan.format || "CycloneDX"],
+                                    ["Status",            scan.status || "—"],
                                 ].map(([field, value], i) => (
                                     <tr key={i}>
                                         <td className={`${i % 2 === 0 ? TD : TDalt} font-semibold text-[#2b2bb2]`}>{field}</td>
@@ -1320,12 +985,12 @@ const ScanDetailPage = () => {
                             </thead>
                             <tbody>
                                 {[
-                                    ["Dependency Mapping",           "Identifies every direct and transitive package used in the project."],
-                                    ["Vulnerability Correlation",    "Correlates components against CVE, NVD, and vendor advisory feeds."],
-                                    ["License Compliance",           "Flags components with restrictive or incompatible license terms."],
+                                    ["Dependency Mapping",        "Identifies every direct and transitive package used in the project."],
+                                    ["Vulnerability Correlation", "Correlates components against CVE, NVD, and vendor advisory feeds."],
+                                    ["License Compliance",        "Flags components with restrictive or incompatible license terms."],
                                     ["Outdated Component Detection", "Highlights packages with available security patches."],
-                                    ["Exploit Tracking",             "Identifies components with known public exploits (EPSS / CISA KEV)."],
-                                    ["CBOM Analysis",                "Maps cryptographic primitives and cipher usage within source code."],
+                                    ["Exploit Tracking",          "Identifies components with known public exploits (EPSS / CISA KEV)."],
+                                    ["CBOM Analysis",             "Maps cryptographic primitives and cipher usage within source code."],
                                 ].map(([cap, desc], i) => (
                                     <tr key={i}>
                                         <td className={`${i % 2 === 0 ? TD : TDalt} font-semibold`}>{cap}</td>
@@ -1356,12 +1021,12 @@ const ScanDetailPage = () => {
                             </thead>
                             <tbody>
                                 {[
-                                    ["Vulnerable Dependencies", "Remote code execution, data exfiltration",     "Critical"],
-                                    ["Outdated Libraries",      "Exposure to known unpatched CVEs",             "High"],
-                                    ["Transitive Risks",        "Indirect vulnerabilities via nested packages", "High"],
-                                    ["License Violations",      "Legal and compliance exposure",                "Medium"],
-                                    ["Cryptographic Weaknesses","Weak cipher suites, deprecated algorithms",    "Medium"],
-                                    ["Configuration Exposure",  "Hardcoded secrets, insecure defaults",         "High"],
+                                    ["Vulnerable Dependencies",  "Remote code execution, data exfiltration",     "Critical"],
+                                    ["Outdated Libraries",        "Exposure to known unpatched CVEs",             "High"],
+                                    ["Transitive Risks",          "Indirect vulnerabilities via nested packages", "High"],
+                                    ["License Violations",        "Legal and compliance exposure",                "Medium"],
+                                    ["Cryptographic Weaknesses",  "Weak cipher suites, deprecated algorithms",   "Medium"],
+                                    ["Configuration Exposure",    "Hardcoded secrets, insecure defaults",         "High"],
                                 ].map(([cat, impact, prio], i) => (
                                     <tr key={i}>
                                         <td className={`${i % 2 === 0 ? TD : TDalt} font-semibold`}>{cat}</td>
@@ -1383,6 +1048,7 @@ const ScanDetailPage = () => {
                         <p className="text-gray-700 text-sm leading-relaxed mb-6">
                             This assessment provides a point-in-time view of the project's dependency risks and internal code exposures. The scan identifies vulnerable components, outdated packages, security-sensitive files, and configuration issues requiring remediation.
                         </p>
+
                         <h3 className="text-sm font-bold text-[#2b2bb2] uppercase tracking-wide mb-2">Scan Metadata</h3>
                         <table className="w-full border-collapse border border-gray-300 text-sm mb-6">
                             <thead>
@@ -1411,6 +1077,7 @@ const ScanDetailPage = () => {
                                 ))}
                             </tbody>
                         </table>
+
                         <h3 className="text-sm font-bold text-[#2b2bb2] uppercase tracking-wide mb-2">Component Summary</h3>
                         <table className="w-full border-collapse border border-gray-300 text-sm mb-6">
                             <thead>
@@ -1421,10 +1088,10 @@ const ScanDetailPage = () => {
                             </thead>
                             <tbody>
                                 {[
-                                    ["Total Components",         components.length],
-                                    ["Vulnerable Components",    components.filter(c => c.vulnerable).length],
-                                    ["Outdated Libraries",       components.filter(c => c.outdated).length],
-                                    ["Components with Exploits", components.filter(c => c.exploit).length],
+                                    ["Total Components",            components.length],
+                                    ["Vulnerable Components",       components.filter(c => c.vulnerable).length],
+                                    ["Outdated Libraries",          components.filter(c => c.outdated).length],
+                                    ["Components with Exploits",    components.filter(c => c.exploit).length],
                                 ].map(([metric, count], i) => (
                                     <tr key={i}>
                                         <td className={i % 2 === 0 ? TD : TDalt}>{metric}</td>
@@ -1433,6 +1100,7 @@ const ScanDetailPage = () => {
                                 ))}
                             </tbody>
                         </table>
+
                         <h3 className="text-sm font-bold text-[#2b2bb2] uppercase tracking-wide mb-2">Vulnerability Severity Breakdown</h3>
                         <table className="w-full border-collapse border border-gray-300 text-sm">
                             <thead>
@@ -1444,10 +1112,10 @@ const ScanDetailPage = () => {
                             </thead>
                             <tbody>
                                 {[
-                                    ["Critical", vulnerabilities.filter(v => v.severity === "critical").length, "Immediate exploitation risk; patch or isolate urgently.",     "text-red-600    bg-red-50"],
-                                    ["High",     vulnerabilities.filter(v => v.severity === "high").length,     "High-impact vulnerabilities requiring prompt remediation.",   "text-orange-600 bg-orange-50"],
-                                    ["Medium",   vulnerabilities.filter(v => v.severity === "medium").length,   "Notable risk; address within standard patch cycle.",           "text-yellow-700 bg-yellow-50"],
-                                    ["Low",      vulnerabilities.filter(v => v.severity === "low").length,      "Minimal risk; address in next scheduled maintenance.",         "text-blue-600   bg-blue-50"],
+                                    ["Critical", vulnerabilities.filter(v => v.severity === "critical").length, "Immediate exploitation risk; patch or isolate urgently.",          "text-red-600    bg-red-50"],
+                                    ["High",     vulnerabilities.filter(v => v.severity === "high").length,     "High-impact vulnerabilities requiring prompt remediation.",        "text-orange-600 bg-orange-50"],
+                                    ["Medium",   vulnerabilities.filter(v => v.severity === "medium").length,   "Notable risk; address within standard patch cycle.",               "text-yellow-700 bg-yellow-50"],
+                                    ["Low",      vulnerabilities.filter(v => v.severity === "low").length,      "Minimal risk; address in next scheduled maintenance.",             "text-blue-600   bg-blue-50"],
                                 ].map(([sev, count, desc, cls]) => (
                                     <tr key={sev}>
                                         <td className={`${TD} font-bold ${cls}`}>{sev}</td>
@@ -1476,13 +1144,13 @@ const ScanDetailPage = () => {
                             </thead>
                             <tbody>
                                 {[
-                                    ["1", "Ingestion",            "Parse uploaded package manifest or SBOM file.",                  "CycloneDX / SPDX"],
-                                    ["2", "Component Extraction", "Extract all direct and transitive dependency metadata.",          "BOM Engine"],
-                                    ["3", "Vulnerability Lookup", "Cross-reference components against CVE / NVD / OSV databases.",  "NVD, OSV, GHSA"],
-                                    ["4", "Exploit Mapping",      "Check for known public exploits via EPSS and CISA KEV.",         "CISA KEV, EPSS"],
-                                    ["5", "Outdated Detection",   "Compare installed versions against latest stable releases.",     "Package Registries"],
-                                    ["6", "CBOM Analysis",        "Identify cryptographic algorithm usage in the source tree.",     "Static Analysis"],
-                                    ["7", "Report Generation",    "Compile findings into structured SBOM + CBOM report.",           "Internal Engine"],
+                                    ["1", "Ingestion",            "Parse uploaded package manifest or SBOM file.",                 "CycloneDX / SPDX"],
+                                    ["2", "Component Extraction", "Extract all direct and transitive dependency metadata.",         "BOM Engine"],
+                                    ["3", "Vulnerability Lookup", "Cross-reference components against CVE / NVD / OSV databases.", "NVD, OSV, GHSA"],
+                                    ["4", "Exploit Mapping",      "Check for known public exploits via EPSS and CISA KEV.",        "CISA KEV, EPSS"],
+                                    ["5", "Outdated Detection",   "Compare installed versions against latest stable releases.",    "Package Registries"],
+                                    ["6", "CBOM Analysis",        "Identify cryptographic algorithm usage in the source tree.",    "Static Analysis"],
+                                    ["7", "Report Generation",   "Compile findings into structured SBOM + CBOM report.",          "Internal Engine"],
                                 ].map(([phase, activity, desc, tool], i) => (
                                     <tr key={i}>
                                         <td className={`${i % 2 === 0 ? TD : TDalt} text-center font-bold text-[#2b2bb2]`}>{phase}</td>
@@ -1545,6 +1213,7 @@ const ScanDetailPage = () => {
                                 </table>
                             </div>
                         )}
+
                     </div>
 
                     {/* 9. TECHNICAL SUMMARY – Components */}
@@ -1618,10 +1287,11 @@ const ScanDetailPage = () => {
                         </p>
                         <p className="mt-6 text-xs text-gray-400">+91 9211770600 &nbsp;|&nbsp; www.rntinfosec.in &nbsp;|&nbsp; project@rntinfosec.in</p>
                     </div>
+
                 </div>
-            )}
+            </div>
         </div>
     );
 };
 
-export default ScanDetailPage;
+export default ReportDownload;

@@ -17,6 +17,7 @@ import NewScan from "./pages/NewScan";
 import AdminDashboard from './pages/AdminDashboard';
 import ProfilePage from './pages/ProfilePage';
 import ScanDetailPage from './pages/ScanDetailPage';
+import ReportDownload from './pages/ReportDownload';
 
 /* ================= Layout Wrapper ================= */
 const AppLayout = () => {
@@ -130,6 +131,16 @@ const AppLayout = () => {
               element={
                 <PrivateRoute>
                   <ScanDetailPage />
+                </PrivateRoute>
+              }
+            />
+
+            {/* Full report download page */}
+            <Route
+              path="/scans/:id/report"
+              element={
+                <PrivateRoute>
+                  <ReportDownload />
                 </PrivateRoute>
               }
             />
