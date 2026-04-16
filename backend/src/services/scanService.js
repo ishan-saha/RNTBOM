@@ -929,8 +929,193 @@ const cleanupTemp = (tempPath) => {
 // module.exports = { runScan };
 
 
+// ─────────────────────────────────────────────────────────────────────────────
+//  Ecosystem detection + Python manifest parsers
+//  (fallback when syft finds 0 components in Python/other repos)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SKIP_DIRS = new Set([
+    'node_modules', '.git', 'venv', '.venv', '__pycache__',
+    'dist', 'build', '.tox', '.eggs', '.pytest_cache', '.mypy_cache',
+]);
+
+/** Recursively search repoPath for filename (depth-limited, skips non-source dirs) */
+const findFileRecursive = (dir, filename, maxDepth = 6, _depth = 0) => {
+    if (_depth > maxDepth) return null;
+    try {
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+        for (const e of entries) {
+            if (e.isFile() && e.name === filename) return path.join(dir, e.name);
+        }
+        for (const e of entries) {
+            if (e.isDirectory() && !SKIP_DIRS.has(e.name)) {
+                const found = findFileRecursive(path.join(dir, e.name), filename, maxDepth, _depth + 1);
+                if (found) return found;
+            }
+        }
+    } catch { /* ignore permission errors */ }
+    return null;
+};
+
+/** Identify the primary package ecosystem by checking for known manifest files */
+const detectEcosystem = (repoPath) => {
+    const checks = [
+        { eco: 'python', files: ['requirements.txt', 'requirements-dev.txt', 'Pipfile', 'Pipfile.lock', 'pyproject.toml', 'setup.py', 'setup.cfg', 'poetry.lock'] },
+        { eco: 'node',   files: ['package.json', 'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml'] },
+        { eco: 'go',     files: ['go.mod'] },
+        { eco: 'java',   files: ['pom.xml', 'build.gradle', 'build.gradle.kts'] },
+        { eco: 'rust',   files: ['Cargo.toml'] },
+        { eco: 'ruby',   files: ['Gemfile', 'Gemfile.lock'] },
+        { eco: 'php',    files: ['composer.json', 'composer.lock'] },
+    ];
+    for (const { eco, files } of checks) {
+        for (const f of files) {
+            if (findFileRecursive(repoPath, f, 4)) return eco;
+        }
+    }
+    return 'unknown';
+};
+
+/**
+ * Parse requirements.txt (and variants) → CycloneDX component objects
+ * Handles: name==ver, name>=ver, name (no version), extras [sec], env markers (;)
+ */
+const parseRequirementsTxt = (filePath) => {
+    const components = [];
+    const lines = fs.readFileSync(filePath, 'utf-8').split('\n');
+    for (let raw of lines) {
+        let line = raw.split('#')[0].trim();           // strip inline comments
+        line = line.split(';')[0].trim();              // strip env markers
+        line = line.replace(/\[.*?\]/g, '').trim();    // strip extras
+        if (!line || line.startsWith('-') || line.startsWith('http')) continue;
+
+        const m = line.match(/^([A-Za-z0-9_\-\.]+)\s*(?:[><!~]=?=?|===?)\s*([^\s,]+)?/);
+        const name    = m ? m[1].trim() : line.trim();
+        const version = m ? (m[2] || '').replace(/[><=!~]/g, '').trim() : '';
+        if (!name) continue;
+
+        components.push({
+            name,
+            version,
+            type:     'library',
+            purl:     `pkg:pypi/${encodeURIComponent(name.toLowerCase())}${version ? '@' + version : ''}`,
+            group:    '',
+            scope:    'required',
+            licenses: [],
+        });
+    }
+    return components;
+};
+
+/**
+ * Parse Pipfile [packages] / [dev-packages] sections (TOML-like)
+ */
+const parsePipfile = (filePath) => {
+    const components = [];
+    const content = fs.readFileSync(filePath, 'utf-8');
+    let inSection = false;
+    for (const raw of content.split('\n')) {
+        const line = raw.trim();
+        if (line === '[packages]' || line === '[dev-packages]') { inSection = true; continue; }
+        if (line.startsWith('[') && line.endsWith(']'))         { inSection = false; continue; }
+        if (!inSection || !line || line.startsWith('#') || !line.includes('=')) continue;
+
+        const eqIdx = line.indexOf('=');
+        const name   = line.slice(0, eqIdx).trim();
+        const rawVer = line.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, '');
+        if (!name || name === 'python') continue;
+        const version = rawVer === '*' ? '' : rawVer.replace(/[><=!~^*"'\s]/g, '');
+
+        components.push({
+            name,
+            version,
+            type:     'library',
+            purl:     `pkg:pypi/${encodeURIComponent(name.toLowerCase())}${version ? '@' + version : ''}`,
+            group:    '',
+            scope:    'required',
+            licenses: [],
+        });
+    }
+    return components;
+};
+
+/**
+ * Parse pyproject.toml — supports both:
+ *   [tool.poetry.dependencies] (poetry)
+ *   [project] dependencies = [...] (PEP 517 / setuptools)
+ */
+const parsePyprojectToml = (filePath) => {
+    const components = [];
+    const content = fs.readFileSync(filePath, 'utf-8');
+    let inPoetryDeps = false;
+    let inProjectSection = false;
+
+    for (const raw of content.split('\n')) {
+        const line = raw.trim();
+
+        if (line === '[tool.poetry.dependencies]') { inPoetryDeps = true; inProjectSection = false; continue; }
+        if (line === '[project]')                  { inProjectSection = true; inPoetryDeps = false; continue; }
+        if (line.startsWith('[') && line.endsWith(']') && line !== '[tool.poetry.dependencies]' && line !== '[project]') {
+            inPoetryDeps = false; inProjectSection = false; continue;
+        }
+
+        // Poetry: name = "^version"
+        if (inPoetryDeps && line.includes('=') && !line.startsWith('#')) {
+            const [namePart, verPart] = line.split('=').map(s => s.trim());
+            const name = namePart;
+            if (!name || name === 'python' || name === 'requires-python') continue;
+            const version = (verPart || '').replace(/["'{}^~>=<!,\s]/g, '').split(',')[0] || '';
+            components.push({
+                name, version, type: 'library',
+                purl: `pkg:pypi/${encodeURIComponent(name.toLowerCase())}${version ? '@' + version : ''}`,
+                group: '', scope: 'required', licenses: [],
+            });
+        }
+
+        // PEP 517: dependencies = ["requests>=2.0", ...]
+        if (inProjectSection && line.startsWith('dependencies')) {
+            // Grab all quoted package strings on subsequent lines until ]
+            const depsBlock = content.slice(content.indexOf(line));
+            const matches = [...depsBlock.matchAll(/"([A-Za-z0-9_\-\.]+)\s*([><!~]=?=?\s*[^\s"]+)?"/g)];
+            for (const m of matches) {
+                const name    = m[1];
+                const version = (m[2] || '').replace(/[><=!~ ]/g, '');
+                if (!name || name === 'python') continue;
+                components.push({
+                    name, version, type: 'library',
+                    purl: `pkg:pypi/${encodeURIComponent(name.toLowerCase())}${version ? '@' + version : ''}`,
+                    group: '', scope: 'required', licenses: [],
+                });
+            }
+            break; // no need to continue after extracting deps block
+        }
+    }
+    return components;
+};
+
+/** Wrap components in a minimal CycloneDX 1.4 SBOM envelope */
+const buildCycloneDXSBOM = (components) => ({
+    bomFormat:   'CycloneDX',
+    specVersion: '1.4',
+    version:     1,
+    components,
+});
+
+/** Write SBOM JSON to a temp file; returns the file path */
+const writeTempSBOM = (scanId, sbomObj) => {
+    const tempDir = path.join(__dirname, '../../temp');
+    fs.mkdirSync(tempDir, { recursive: true });
+    const outPath = path.join(tempDir, `${scanId}-sbom.json`);
+    fs.writeFileSync(outPath, JSON.stringify(sbomObj, null, 2), 'utf-8');
+    return outPath;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  MAIN: runScan
+// ─────────────────────────────────────────────────────────────────────────────
 const runScan = async (scan) => {
-    let tempToClean = null;
+    let tempToClean    = null;
+    let tempSBOMFile   = null;   // set when we write a fallback SBOM to disk
 
     try {
         console.log("🚀 START SCAN:", scan._id, "| type:", scan.scanType);
@@ -1073,12 +1258,81 @@ const runScan = async (scan) => {
             }
         }
 
-        // ✅ GitHub / Docker
+        // ✅ GitHub / Docker — run syft; if it returns 0 components, use
+        //    ecosystem-specific manifest parsing as a fallback.
         else {
             console.log("🔍 Running syft on:", target);
 
-            const sbomRaw = await execTool("syft", [target, "-o", "cyclonedx-json"]);
-            sbom = safeParseJSON(sbomRaw, "syft");
+            try {
+                const sbomRaw = await execTool("syft", [target, "-o", "cyclonedx-json"]);
+                sbom = safeParseJSON(sbomRaw, "syft");
+            } catch (syftErr) {
+                console.warn("⚠️ syft failed:", String(syftErr).slice(0, 200));
+                sbom = null;
+            }
+
+            // ── Python / ecosystem fallback ───────────────────────────────
+            if (!sbom || !sbom.components || sbom.components.length === 0) {
+                console.log("⚠️ syft returned 0 components — trying manifest fallback...");
+
+                const ecosystem = detectEcosystem(target);
+                console.log("🔍 Detected ecosystem:", ecosystem);
+
+                if (ecosystem === 'python') {
+                    let pyComponents = [];
+
+                    // 1. requirements.txt (most common)
+                    const reqFile = findFileRecursive(target, 'requirements.txt')
+                                 || findFileRecursive(target, 'requirements-dev.txt')
+                                 || findFileRecursive(target, 'requirements_dev.txt');
+                    if (reqFile) {
+                        console.log("🐍 Parsing requirements.txt:", reqFile);
+                        pyComponents = parseRequirementsTxt(reqFile);
+                    }
+
+                    // 2. Pipfile
+                    if (pyComponents.length === 0) {
+                        const pipfile = findFileRecursive(target, 'Pipfile');
+                        if (pipfile) {
+                            console.log("🐍 Parsing Pipfile:", pipfile);
+                            pyComponents = parsePipfile(pipfile);
+                        }
+                    }
+
+                    // 3. pyproject.toml (poetry / PEP 517)
+                    if (pyComponents.length === 0) {
+                        const toml = findFileRecursive(target, 'pyproject.toml');
+                        if (toml) {
+                            console.log("🐍 Parsing pyproject.toml:", toml);
+                            pyComponents = parsePyprojectToml(toml);
+                        }
+                    }
+
+                    if (pyComponents.length > 0) {
+                        console.log(`✅ Python fallback: ${pyComponents.length} components parsed`);
+                        sbom = buildCycloneDXSBOM(pyComponents);
+                        // Write to disk so grype can consume it via sbom: prefix
+                        tempSBOMFile = writeTempSBOM(scan._id.toString(), sbom);
+                    } else {
+                        throw new Error(
+                            "No supported Python dependency manifest found. " +
+                            "Expected: requirements.txt, Pipfile, or pyproject.toml"
+                        );
+                    }
+
+                } else if (ecosystem === 'unknown') {
+                    throw new Error(
+                        "No supported dependency manifest detected. " +
+                        "Supported: requirements.txt, package.json, go.mod, pom.xml, Cargo.toml, Gemfile, composer.json"
+                    );
+                } else {
+                    // syft should handle non-Python ecosystems — re-throw as informational
+                    throw new Error(
+                        `SBOM generation returned no components for ${ecosystem} project. ` +
+                        "Ensure the repository includes a valid dependency manifest."
+                    );
+                }
+            }
 
             isValidSBOM = true;
         }
@@ -1102,17 +1356,18 @@ const runScan = async (scan) => {
         // docker/github
         else if (scan.scanType !== "upload") {
 
-            if (typeof target === "string" && target.endsWith(".json")) {
-                console.log("🛡️ Grype SBOM file mode");
+            // If Python fallback wrote a SBOM file, use it directly
+            const grypeTarget = tempSBOMFile || target;
+            const useSBOMMode = tempSBOMFile ||
+                (typeof grypeTarget === "string" && grypeTarget.endsWith(".json"));
 
-                const vulnRaw = await execTool("grype", [`sbom:${target}`, "-o", "json"]);
+            if (useSBOMMode) {
+                console.log("🛡️ Grype SBOM file mode:", grypeTarget);
+                const vulnRaw = await execTool("grype", [`sbom:${grypeTarget}`, "-o", "json"]);
                 matches = safeParseJSON(vulnRaw, "grype").matches || [];
-            }
-
-            else {
-                console.log("🛡️ Grype image/dir mode");
-
-                const vulnRaw = await execTool("grype", [target, "-o", "json"]);
+            } else {
+                console.log("🛡️ Grype image/dir mode:", grypeTarget);
+                const vulnRaw = await execTool("grype", [grypeTarget, "-o", "json"]);
                 matches = safeParseJSON(vulnRaw, "grype").matches || [];
             }
         }
@@ -1255,6 +1510,7 @@ const runScan = async (scan) => {
 
     } finally {
         cleanupTemp(tempToClean);
+        cleanupTemp(tempSBOMFile);
     }
 };
 
