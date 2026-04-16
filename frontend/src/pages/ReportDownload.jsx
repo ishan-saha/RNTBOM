@@ -1,9 +1,8 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { XCircle, CheckCircle, Clock, ArrowLeft, Download } from "lucide-react";
 import API from "../api/auth";
-import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
+import toast from "react-hot-toast";
 
 
 const SeverityBadge = ({ severity }) => {
@@ -46,7 +45,25 @@ const ReportDownload = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [pdfLoading, setPdfLoading] = useState(false);
-    const reportRef = useRef();
+
+    const handleDownloadPDF = async () => {
+        setPdfLoading(true);
+        try {
+            const res = await API.get(`/scans/${id}/report/pdf`, { responseType: 'blob' });
+            const url = URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `SBOM_Report_${id}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        } catch {
+            toast.error('Failed to download PDF report. Please try again.');
+        } finally {
+            setPdfLoading(false);
+        }
+    };
 
     useEffect(() => {
         const fetchScan = async () => {
@@ -61,105 +78,6 @@ const ReportDownload = () => {
         };
         fetchScan();
     }, [id]);
-
-    const handleDownloadPDF = async () => {
-        setPdfLoading(true);
-        const element = reportRef.current;
-
-        const overrideStyle = document.createElement('style');
-        overrideStyle.id = '__pdf_oklch_fix';
-        overrideStyle.textContent = `
-            :root {
-                --color-white:#ffffff;--color-black:#000000;
-                --color-gray-50:#f9fafb;--color-gray-100:#f3f4f6;--color-gray-200:#e5e7eb;
-                --color-gray-300:#d1d5db;--color-gray-400:#9ca3af;--color-gray-500:#6b7280;
-                --color-gray-600:#4b5563;--color-gray-700:#374151;--color-gray-800:#1f2937;
-                --color-gray-900:#111827;--color-gray-950:#030712;
-                --color-slate-50:#f8fafc;--color-slate-100:#f1f5f9;--color-slate-200:#e2e8f0;
-                --color-slate-300:#cbd5e1;--color-slate-400:#94a3b8;--color-slate-500:#64748b;
-                --color-slate-600:#475569;--color-slate-700:#334155;--color-slate-800:#1e293b;
-                --color-slate-900:#0f172a;--color-slate-950:#020617;
-                --color-red-50:#fef2f2;--color-red-100:#fee2e2;--color-red-200:#fecaca;
-                --color-red-300:#fca5a5;--color-red-400:#f87171;--color-red-500:#ef4444;
-                --color-red-600:#dc2626;--color-red-700:#b91c1c;--color-red-800:#991b1b;
-                --color-red-900:#7f1d1d;--color-red-950:#450a0a;
-                --color-orange-50:#fff7ed;--color-orange-100:#ffedd5;--color-orange-200:#fed7aa;
-                --color-orange-300:#fdba74;--color-orange-400:#fb923c;--color-orange-500:#f97316;
-                --color-orange-600:#ea580c;--color-orange-700:#c2410c;--color-orange-800:#9a3412;
-                --color-orange-900:#7c2d12;--color-orange-950:#431407;
-                --color-yellow-50:#fefce8;--color-yellow-100:#fef9c3;--color-yellow-200:#fef08a;
-                --color-yellow-300:#fde047;--color-yellow-400:#facc15;--color-yellow-500:#eab308;
-                --color-yellow-600:#ca8a04;--color-yellow-700:#a16207;--color-yellow-800:#854d0e;
-                --color-yellow-900:#713f12;--color-yellow-950:#422006;
-                --color-green-50:#f0fdf4;--color-green-100:#dcfce7;--color-green-200:#bbf7d0;
-                --color-green-300:#86efac;--color-green-400:#4ade80;--color-green-500:#22c55e;
-                --color-green-600:#16a34a;--color-green-700:#15803d;--color-green-800:#166534;
-                --color-green-900:#14532d;--color-green-950:#052e16;
-                --color-blue-50:#eff6ff;--color-blue-100:#dbeafe;--color-blue-200:#bfdbfe;
-                --color-blue-300:#93c5fd;--color-blue-400:#60a5fa;--color-blue-500:#3b82f6;
-                --color-blue-600:#2563eb;--color-blue-700:#1d4ed8;--color-blue-800:#1e40af;
-                --color-blue-900:#1e3a8a;--color-blue-950:#172554;
-                --color-sky-50:#f0f9ff;--color-sky-100:#e0f2fe;--color-sky-200:#bae6fd;
-                --color-sky-300:#7dd3fc;--color-sky-400:#38bdf8;--color-sky-500:#0ea5e9;
-                --color-sky-600:#0284c7;--color-sky-700:#0369a1;--color-sky-800:#075985;
-                --color-sky-900:#0c4a6e;--color-sky-950:#082f49;
-                --color-indigo-50:#eef2ff;--color-indigo-100:#e0e7ff;--color-indigo-200:#c7d2fe;
-                --color-indigo-300:#a5b4fc;--color-indigo-400:#818cf8;--color-indigo-500:#6366f1;
-                --color-indigo-600:#4f46e5;--color-indigo-700:#4338ca;--color-indigo-800:#3730a3;
-                --color-indigo-900:#312e81;--color-indigo-950:#1e1b4b;
-                --color-purple-50:#faf5ff;--color-purple-100:#f3e8ff;--color-purple-200:#e9d5ff;
-                --color-purple-300:#d8b4fe;--color-purple-400:#c084fc;--color-purple-500:#a855f7;
-                --color-purple-600:#9333ea;--color-purple-700:#7e22ce;--color-purple-800:#6b21a8;
-                --color-purple-900:#581c87;--color-purple-950:#3b0764;
-            }
-        `;
-        document.head.appendChild(overrideStyle);
-
-        try {
-            // Wait for fonts and images to be ready, then a short tick for styles to apply
-            if (document.fonts && document.fonts.ready) await document.fonts.ready;
-            const imgs = Array.from(element.querySelectorAll('img'));
-            await Promise.all(imgs.map(img => new Promise(resolve => {
-                if (!img.src) return resolve();
-                if (img.complete) return resolve();
-                img.addEventListener('load', resolve);
-                img.addEventListener('error', resolve);
-            })));
-            await new Promise(r => setTimeout(r, 150));
-
-            const canvas = await html2canvas(element, {
-                scale: 2,
-                useCORS: true,
-                logging: false,
-                letterRendering: true,
-                backgroundColor: '#ffffff',
-            });
-
-            const pageW = 210;
-            const pageH = 297;
-            const imgW = pageW;
-            const imgH = (canvas.height * imgW) / canvas.width;
-
-            const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-            let position = 0;
-            let remainingH = imgH;
-            const imgData = canvas.toDataURL('image/jpeg', 0.95);
-
-            while (remainingH > 0) {
-                pdf.addImage(imgData, 'JPEG', 0, position, imgW, imgH);
-                remainingH -= pageH;
-                if (remainingH > 0) {
-                    pdf.addPage();
-                    position -= pageH;
-                }
-            }
-
-            pdf.save(`SBOM_Report_${scan?._id || "report"}.pdf`);
-        } finally {
-            overrideStyle.remove();
-            setPdfLoading(false);
-        }
-    };
 
     if (loading) {
         return (
@@ -230,7 +148,7 @@ const ReportDownload = () => {
                 </div>
 
                 {/* â”€â”€ REPORT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-                <div ref={reportRef} className="bg-white text-black rounded-xl shadow font-sans">
+                <div className="bg-white text-black rounded-xl shadow font-sans">
 
                     {/* 1. COVER PAGE */}
                     <div className="relative flex flex-col p-12 min-h-[90vh] overflow-hidden" style={{ pageBreakAfter: 'always' }}>

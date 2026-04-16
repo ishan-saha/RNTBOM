@@ -10,6 +10,7 @@ const {
     updateScanStatus,
     searchScans,
     getScanStats,
+    downloadReport,
 } = require('../controllers/scanController');
 
 const router = express.Router();
@@ -45,6 +46,7 @@ router.get('/', protect, getScans);
 router.get('/stats', protect, getScanStats);  // ⚠️ before /:id
 router.get('/search', protect, searchScans);  // ⚠️ before /:id
 router.get('/:id', protect, getScanById);
+router.get('/:id/report/pdf', protect, downloadReport); // ✅ PDF download
 
 // Keep this for your scanner worker / admin task later
 router.patch('/:id/status', protect, authorize('admin'), updateScanStatus);

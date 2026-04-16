@@ -306,6 +306,48 @@ const getScanStats = async (req, res) => {
     }
 };
 
+// ─── DOWNLOAD PDF REPORT ──────────────────────────────────────────────────────
+const downloadReport = async (req, res) => {
+    try {
+        const filter = buildBaseFilter(req.user);
+        filter._id = req.params.id;
+
+        const scan = await Scan.findOne(filter)
+            .populate('uploadedBy', 'name email')
+            .populate('organization', 'name')
+            .populate('report');
+
+        if (!scan) {
+            return res.status(404).json({ success: false, message: 'Scan not found.' });
+        }
+
+        if (scan.status !== 'completed') {
+            return res.status(400).json({
+                success: false,
+                message: 'PDF report is only available for completed scans.',
+            });
+        }
+
+        const { generateScanPDF } = require('../utils/pdfGenerator');
+        const doc = generateScanPDF(scan, scan.report);
+
+        const safeName = (scan.filename || 'report')
+            .replace(/[^a-zA-Z0-9_-]/g, '_')
+            .slice(0, 50);
+        const filename = `SBOM_Report_${safeName}.pdf`;
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+        doc.pipe(res);
+    } catch (error) {
+        console.error('PDF download error:', error);
+        if (!res.headersSent) {
+            res.status(500).json({ success: false, message: 'Failed to generate PDF report.' });
+        }
+    }
+};
+
 // ─── EXPORTS ─────────────────────────────────────────────────────────────────
 module.exports = {
     createScan,
@@ -314,4 +356,5 @@ module.exports = {
     updateScanStatus,
     searchScans,
     getScanStats,
+    downloadReport,
 };
