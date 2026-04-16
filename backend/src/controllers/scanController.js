@@ -60,12 +60,12 @@ const createScan = async (req, res) => {
 
         if (sourceType === 'upload') {
             if (!req.file) return res.status(400).json({ success: false, message: 'File not received. Please upload again.' });
-            sourceValue = req.file.path;
+            sourceValue = { filePath: req.file.path };
             format = detectFormatFromFile(req.file);
         }
         if (sourceType === 'github') {
             if (!repoUrl?.trim()) return res.status(400).json({ success: false, message: 'Git repository URL is required.' });
-            sourceValue = repoUrl.trim();
+            sourceValue = { repoUrl: repoUrl.trim() };
         }
         // if (sourceType === 'docker') {
         //     if (!imageName?.trim()) return res.status(400).json({ success: false, message: 'Docker image name is required.' });

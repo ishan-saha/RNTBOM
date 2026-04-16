@@ -939,17 +939,18 @@ const runScan = async (scan) => {
 
         // ─────────────────────────────
         // 🎯 STEP 1: SET INITIAL TARGET
+        // scan.source is always an object: { filePath?, repoUrl?, image?, link? }
         // ─────────────────────────────
         if (scan.scanType === "upload") {
-            target = scan.source.filePath;
+            target = scan.source?.filePath || "";
         }
 
         else if (scan.scanType === "github") {
-            target = scan.source.repoUrl;
+            target = scan.source?.repoUrl || "";
         }
 
         else if (scan.scanType === "docker") {
-            target = scan.source.image || "";
+            target = scan.source?.image || "";
         }
 
         console.log("📍 Initial TARGET:", target);
@@ -958,17 +959,19 @@ const runScan = async (scan) => {
         // 📥 STEP 2: GITHUB CLONE
         // ─────────────────────────────
         if (scan.scanType === "github") {
+            if (!target) throw new Error("GitHub repo URL is missing from scan source");
+
             const repoPath = path.join(__dirname, "../../temp", scan._id.toString());
             fs.mkdirSync(path.join(__dirname, "../../temp"), { recursive: true });
 
             if (!fs.existsSync(repoPath)) {
-                console.log("📥 Cloning repo:", scan.source.repoUrl);
+                console.log("📥 Cloning repo:", target);
 
                 await execTool("git", [
                     "clone",
                     "--depth",
                     "1",
-                    scan.source.repoUrl,
+                    target,
                     repoPath
                 ]);
             }

@@ -28,16 +28,17 @@ const C = {
     grayMid:      '#6b7280',   // gray-500
     grayDark:     '#374151',   // gray-700  (body text)
     bodyText:     '#1f2937',   // gray-800
-    red:          '#dc2626',
-    redBg:        '#fef2f2',
-    orange:       '#ea580c',
-    orangeBg:     '#fff7ed',
-    yellowDark:   '#92400e',
-    yellowBg:     '#fffbeb',
+    // Severity — richer pill colours matching the reference design
+    red:          '#b91c1c',   // red-700  (darker, more contrast)
+    redBg:        '#fecaca',   // red-200  (warm pink pill bg)
+    orange:       '#c2410c',   // orange-700
+    orangeBg:     '#fed7aa',   // orange-200 (warm peach pill bg)
+    yellowDark:   '#78350f',   // amber-900 (dark olive)
+    yellowBg:     '#fef08a',   // yellow-200 (bright yellow pill bg)
     blue:         '#1d4ed8',
-    blueBg:       '#eff6ff',
-    green:        '#15803d',
-    greenBg:      '#f0fdf4',
+    blueBg:       '#bfdbfe',   // blue-200  (pill bg)
+    green:        '#166534',   // green-800 (darker)
+    greenBg:      '#bbf7d0',   // green-200 (bright green pill bg)
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -50,15 +51,38 @@ const sevColor = (s) => ({
     critical: C.red,
     high:     C.orange,
     medium:   C.yellowDark,
-    low:      C.blue,
+    low:      C.green,
 }[(s || '').toLowerCase()] || C.grayMid);
 
 const sevBg = (s) => ({
     critical: C.redBg,
     high:     C.orangeBg,
     medium:   C.yellowBg,
-    low:      C.blueBg,
+    low:      C.greenBg,
 }[(s || '').toLowerCase()] || C.offWhite);
+
+// Draw a pill-shaped severity badge (rounded rect + bold centred text)
+const drawSeverityBadge = (doc, val, cx, cy, colWidth, rowHeight) => {
+    const label   = String(val).toUpperCase();
+    const sev     = label.toLowerCase();
+    const fg      = sevColor(sev);
+    const bg      = sevBg(sev);
+    const pillW   = Math.min(colWidth - 10, 72);
+    const pillH   = 14;
+    const pillX   = cx + (colWidth - pillW) / 2;
+    const pillY   = cy + (rowHeight - pillH) / 2;
+    // Rounded rectangle pill
+    doc.save()
+       .fillColor(bg)
+       .roundedRect(pillX, pillY, pillW, pillH, pillH / 2)
+       .fill()
+       .restore();
+    // Bold centred label
+    doc.x = pillX;
+    doc.y = pillY + 2;
+    doc.fillColor(fg).font('Helvetica-Bold').fontSize(7)
+       .text(label, { width: pillW, align: 'center', lineBreak: false });
+};
 
 // Raw rectangle fills / strokes
 const fillRect = (doc, x, y, w, h, color) =>
@@ -97,7 +121,14 @@ const addPage = (doc) => {
     // Very thin top accent line (matches the accent bar feel without consuming space)
     fillRect(doc, 0, 0, PAGE_W, 4, C.brand);
     drawFooter(doc);
-    return M + 14;
+    // CRITICAL: reset cursor to top of content area.
+    // drawFooter() moves doc.y to the bottom (~820). If we then try to render
+    // text at an explicit Y near the top (e.g. 62), PDFKit treats it as a
+    // "backwards" move and auto-inserts another page, causing cascading blank pages.
+    const startY = M + 14;
+    doc.x = M;
+    doc.y = startY;
+    return startY;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -178,15 +209,22 @@ const dataTable = (doc, cols, rows, startY) => {
     const scaled   = cols.map((c) => ({ ...c, width: Math.floor(c.width * scale) }));
     const tableW   = scaled.reduce((s, c) => s + c.width, 0);
 
+    // Draw the blue header row for the table.
+    // IMPORTANT: we pre-position doc.x/doc.y before each cell and call
+    // doc.text() WITHOUT explicit y coordinates.  Passing an explicit y that
+    // is less than the current doc.y causes PDFKit to auto-insert a new page,
+    // which is what produces the "one row per page" bug on continuation pages.
     const drawHeader = (ty) => {
         fillRect(doc, M, ty, tableW, HEADER_H, C.brand);
-        // Header bottom border (slightly darker)
         strokeRect(doc, M, ty, tableW, HEADER_H, C.brandDark, 1);
 
         let cx = M;
         scaled.forEach((c) => {
+            // Pre-position — no explicit y passed to .text()
+            doc.x = cx + 5;
+            doc.y = ty + 8;
             doc.fillColor(C.white).font('Helvetica-Bold').fontSize(7.5)
-               .text(c.label, cx + 5, ty + 8, {
+               .text(c.label, {
                    width:     c.width - 10,
                    lineBreak: false,
                    ellipsis:  true,
@@ -194,6 +232,9 @@ const dataTable = (doc, cols, rows, startY) => {
                });
             cx += c.width;
         });
+        // Restore x to margin and move y past the header band
+        doc.x = M;
+        doc.y = ty + HEADER_H;
         return ty + HEADER_H;
     };
 
@@ -204,6 +245,11 @@ const dataTable = (doc, cols, rows, startY) => {
             doc.addPage();
             fillRect(doc, 0, 0, PAGE_W, 4, C.brand);
             drawFooter(doc);
+            // Fully reset the PDFKit cursor to the top of the content area
+            // BEFORE calling drawHeader, so none of the header's pre-positioned
+            // text calls see a backwards y and trigger another auto-page.
+            doc.x = M;
+            doc.y = M + 14;
             y = M + 14;
             y = drawHeader(y);
         }
@@ -215,14 +261,29 @@ const dataTable = (doc, cols, rows, startY) => {
         let cx = M;
         scaled.forEach((col, ci) => {
             const val = row[ci] ?? '—';
+
+            // Badge column — draw a coloured pill instead of plain text
+            if (col.badge) {
+                drawSeverityBadge(doc, val, cx, y, col.width, ROW_H);
+                // keep cursor in sync without advancing y
+                doc.x = cx + col.width;
+                doc.y = y + 6;
+                cx += col.width;
+                return;
+            }
+
             let color = C.grayDark;
             if (typeof col.color === 'function') color = col.color(val, row);
             else if (col.color)                  color = col.color;
 
+            // Pre-position — no explicit y passed to .text() to avoid
+            // backwards-y auto-page triggers when rendering multi-column rows.
+            doc.x = cx + 5;
+            doc.y = y + 6;
             doc.fillColor(color)
                .font(col.bold ? 'Helvetica-Bold' : 'Helvetica')
                .fontSize(7.5)
-               .text(String(val), cx + 5, y + 6, {
+               .text(String(val), {
                    width:     col.width - 10,
                    lineBreak: false,
                    ellipsis:  true,
@@ -230,7 +291,11 @@ const dataTable = (doc, cols, rows, startY) => {
                });
             cx += col.width;
         });
+
+        // Advance y by the fixed row height (not by whatever PDFKit set doc.y to)
         y += ROW_H;
+        doc.x = M;
+        doc.y = y;  // keep PDFKit cursor in sync with our y tracker
     });
 
     return y + 8;
@@ -506,11 +571,10 @@ const generateScanPDF = (scan, report) => {
     if (y + 80 > BODY_BOT) { y = addPage(doc); }
     y = subHeading(doc, 'Vulnerability Severity Breakdown', y);
     y = dataTable(doc, [
-        { label: 'Severity',    width: 100, bold: true,
-          color: (v) => ({ CRITICAL: C.red, HIGH: C.orange, MEDIUM: C.yellowDark, LOW: C.blue }[v] || C.grayMid) },
+        { label: 'Severity',    width: 110, badge: true },
         { label: 'Count',       width: 60,  align: 'center', bold: true,
-          color: (v, row) => ({ CRITICAL: C.red, HIGH: C.orange, MEDIUM: C.yellowDark, LOW: C.blue }[row[0]] || C.grayMid) },
-        { label: 'Description', width: CW - 160 },
+          color: (v, row) => sevColor(row[0].toLowerCase()) },
+        { label: 'Description', width: CW - 170 },
     ], [
         ['CRITICAL', vulnCritical, 'Immediate exploitation risk; patch or isolate urgently.'],
         ['HIGH',     vulnHigh,     'High-impact vulnerabilities requiring prompt remediation.'],
@@ -552,162 +616,35 @@ const generateScanPDF = (scan, report) => {
         'including CVE identifiers, affected packages, severity ratings, and recommended fix versions.',
     y);
 
-    // if (vulnerabilities.length === 0) {
-    //     fillRect(doc, M, y, CW, 46, C.greenBg);
-    //     strokeRect(doc, M, y, CW, 46, C.green, 1);
-    //     fillRect(doc, M, y, 4, 46, C.green);
-    //     doc.fillColor(C.green).font('Helvetica-Bold').fontSize(10)
-    //        .text('No vulnerabilities detected in this scan.', M + 14, y + 16, { width: CW - 24 });
-    //     y += 56;
-    // } else {
-    //     y = dataTable(doc, [
-    //         { label: '#',            width: 28,  align: 'center',  color: C.grayMid },
-    //         { label: 'CVE / ID',     width: 110, bold: true,        color: C.brand   },
-    //         { label: 'Severity',     width: 68,  align: 'center',  bold: true,
-    //           color: (v) => sevColor(v.toLowerCase()) },
-    //         { label: 'Package',      width: 100, bold: true        },
-    //         { label: 'Version',      width: 62,  color: C.grayMid  },
-    //         { label: 'Fixed In',     width: 62,  color: C.green    },
-    //         // { label: 'Description',  width: CW - 28 - 110 - 68 - 100 - 62 - 62 },
-    //     ], vulnerabilities.map((v, i) => [
-    //         i + 1,
-    //         v.cve || '\u2014',
-    //         (v.severity || 'unknown').toUpperCase(),
-    //         v.package || '\u2014',
-    //         v.version || '\u2014',
-    //         v.fixedVersion || '\u2014',
-    //         // v.description
-    //         //     ? (v.description.length > 70 ? v.description.slice(0, 70) + '\u2026' : v.description)
-    //         //     : '\u2014',
-    //     ]), y);
-    // }
-
     if (vulnerabilities.length === 0) {
-    fillRect(doc, M, y, CW, 46, C.greenBg);
-    strokeRect(doc, M, y, CW, 46, C.green, 1);
-    fillRect(doc, M, y, 4, 46, C.green);
-
-    doc.fillColor(C.green)
-        .font('Helvetica-Bold')
-        .fontSize(10)
-        .text(
-            'No vulnerabilities detected in this scan.',
-            M + 14,
-            y + 16,
-            { width: CW - 24 }
-        );
-
-    y += 56;
-} else {
-    const cols = [
-        { label: '#', width: 28 },
-        { label: 'CVE / ID', width: 110 },
-        { label: 'Severity', width: 90 },
-        { label: 'Package', width: 100 },
-        { label: 'Version', width: 62 },
-        { label: 'Fixed In', width: 62 },
-    ];
-
-    const ROW_H = 24;
-    const HEADER_H = 24;
-    const tableW = cols.reduce((s, c) => s + c.width, 0);
-
-    // Header
-    fillRect(doc, M, y, tableW, HEADER_H, C.brand);
-
-    let cx = M;
-    cols.forEach(col => {
-        doc.fillColor(C.white)
-            .font('Helvetica-Bold')
-            .fontSize(8)
-            .text(col.label, cx + 5, y + 7, {
-                width: col.width - 10,
-                align: 'center'
-            });
-        cx += col.width;
-    });
-
-    y += HEADER_H;
-
-    vulnerabilities.forEach((v, i) => {
-        fillRect(doc, M, y, tableW, ROW_H, i % 2 === 0 ? C.white : C.offWhite);
-        strokeRect(doc, M, y, tableW, ROW_H, C.grayBorder, 0.5);
-
-        const severity = (v.severity || 'unknown').toLowerCase();
-
-        const sevMap = {
-            critical: { bg: '#fee2e2', text: '#dc2626' },
-            high: { bg: '#ffedd5', text: '#ea580c' },
-            medium: { bg: '#fef9c3', text: '#a16207' },
-            low: { bg: '#dcfce7', text: '#16a34a' },
-        };
-
-        const sevStyle = sevMap[severity] || {
-            bg: '#f3f4f6',
-            text: '#374151'
-        };
-
-        const row = [
+        fillRect(doc, M, y, CW, 46, C.greenBg);
+        strokeRect(doc, M, y, CW, 46, C.green, 1);
+        fillRect(doc, M, y, 4, 46, C.green);
+        doc.fillColor(C.green).font('Helvetica-Bold').fontSize(10)
+           .text('No vulnerabilities detected in this scan.', M + 14, y + 16, { width: CW - 24 });
+        y += 56;
+    } else {
+        y = dataTable(doc, [
+            { label: '#',           width: 28,  align: 'center', color: C.grayMid },
+            { label: 'CVE / ID',    width: 110, bold: true,       color: C.brand   },
+            { label: 'Severity',    width: 76,  badge: true                        },
+            { label: 'Package',     width: 100, bold: true                         },
+            { label: 'Version',     width: 62,  color: C.grayMid                  },
+            { label: 'Fixed In',    width: 62,  color: C.green                    },
+            { label: 'Description', width: CW - 28 - 110 - 76 - 100 - 62 - 62    },
+        ], vulnerabilities.map((v, i) => [
             i + 1,
-            v.cve || '—',
-            severity.toUpperCase(),
-            v.package || '—',
-            v.version || '—',
-            v.fixedVersion || '—',
-        ];
-
-        cx = M;
-
-        row.forEach((cell, idx) => {
-            if (idx === 2) {
-                // Severity Badge
-                const badgeX = cx + 10;
-                const badgeY = y + 4;
-                const badgeW = cols[idx].width - 20;
-                const badgeH = 16;
-
-                doc.save()
-                    .fillColor(sevStyle.bg)
-                    .roundedRect(badgeX, badgeY, badgeW, badgeH, 8)
-                    .fill();
-
-                doc.fillColor(sevStyle.text)
-                    .font('Helvetica-Bold')
-                    .fontSize(7.5)
-                    .text(
-                        cell,
-                        badgeX,
-                        badgeY + 4,
-                        {
-                            width: badgeW,
-                            align: 'center'
-                        }
-                    );
-
-                doc.restore();
-            } else {
-                doc.fillColor(C.grayDark)
-                    .font('Helvetica')
-                    .fontSize(7.5)
-                    .text(
-                        String(cell),
-                        cx + 5,
-                        y + 7,
-                        {
-                            width: cols[idx].width - 10,
-                            align: 'center'
-                        }
-                    );
-            }
-
-            cx += cols[idx].width;
-        });
-
-        y += ROW_H;
-    });
-
-    y += 10;
-}
+            v.cve || '\u2014',
+            (v.severity || 'unknown').toUpperCase(),
+            v.package || '\u2014',
+            v.version || '\u2014',
+            v.fixedVersion || '\u2014',
+            // v.description
+            //     ? (v.description.length > 70 ? v.description.slice(0, 70) + '\u2026' : v.description)
+            //     : '\u2014',
+        ]), y);
+    }
+ 
 
     // ═══════════════════════════════════════ 9. TECHNICAL SUMMARY ════════════
     if (y + 80 > BODY_BOT) { y = addPage(doc); }
