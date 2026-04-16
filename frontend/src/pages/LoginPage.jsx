@@ -74,7 +74,7 @@ const LoginPage = () => {
 
       toast.success(`Welcome back, ${user.name}! 👋`);
 
-      navigate(user.role === 'admin' ? '/admin' : '/dashboard');
+      navigate(user.role === 'admin' ? '/admin/dashboard' : '/dashboard');
 
     } catch (err) {
       const msg =

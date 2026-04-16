@@ -177,11 +177,20 @@ const signup = async (req, res) => {
     }
 
     // 🔥 4. Prevent random admin creation
+    // Only allow `admin` role when creating the very first user (bootstrap)
+    // or when a valid `adminSecret` is provided in the request body that
+    // matches `process.env.ADMIN_CREATION_SECRET`.
     if (role === 'admin') {
-      // allow only if no users exist OR add your logic
       const userCount = await User.countDocuments();
-      if (userCount > 0) {
-        role = 'user'; // downgrade
+      const providedSecret = req.body && req.body.adminSecret;
+      const secretOk = providedSecret && process.env.ADMIN_CREATION_SECRET && providedSecret === process.env.ADMIN_CREATION_SECRET;
+
+      if (userCount === 0) {
+        // allow first user to be admin (bootstrap)
+      } else if (!secretOk) {
+        // downgrade silently and log the attempt
+        console.warn(`Admin creation attempt blocked for email=${email}`);
+        role = 'user';
       }
     }
 
