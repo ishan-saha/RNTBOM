@@ -84,9 +84,11 @@ const SignupPage = () => {
     try {
       const { confirmPassword, ...payload } = formData;
       const res = await signupUser(payload);
-      login(res.data.user, res.data.token);
-      toast.success(`Account created! Welcome, ${res.data.user.name}! 🎉`);
-      navigate(res.data.user.role === 'admin' ? '/admin' : '/dashboard');
+      const user = res.data.data.user;
+      const token = res.data.data.token;
+      login(user, token);
+      toast.success(`Account created! Welcome, ${user.name}! 🎉`);
+      navigate(user.role === 'admin' ? '/admin/dashboard' : '/dashboard');
     } catch (err) {
       const msg = err.response?.data?.message || 'Signup failed. Please try again.';
       toast.error(msg);

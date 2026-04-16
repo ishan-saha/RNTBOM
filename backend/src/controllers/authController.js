@@ -176,25 +176,7 @@ const signup = async (req, res) => {
       });
     }
 
-    // 🔥 4. Prevent random admin creation
-    // Only allow `admin` role when creating the very first user (bootstrap)
-    // or when a valid `adminSecret` is provided in the request body that
-    // matches `process.env.ADMIN_CREATION_SECRET`.
-    if (role === 'admin') {
-      const userCount = await User.countDocuments();
-      const providedSecret = req.body && req.body.adminSecret;
-      const secretOk = providedSecret && process.env.ADMIN_CREATION_SECRET && providedSecret === process.env.ADMIN_CREATION_SECRET;
-
-      if (userCount === 0) {
-        // allow first user to be admin (bootstrap)
-      } else if (!secretOk) {
-        // downgrade silently and log the attempt
-        console.warn(`Admin creation attempt blocked for email=${email}`);
-        role = 'user';
-      }
-    }
-
-    // 🔥 5. Handle organization (string or ObjectId)
+    // 🔥 4. Handle organization (string or ObjectId)
     let org;
 
     if (mongoose.Types.ObjectId.isValid(organization)) {
