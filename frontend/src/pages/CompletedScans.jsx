@@ -192,7 +192,10 @@ const CompletedScans = () => {
                                     </h2>
 
                                     {/* Tighter gap on mobile so 4 metadata chips fit without triggering full-width layout breaks. */}
-                                    <div className="flex flex-wrap gap-2 sm:gap-4 text-xs text-slate-400">
+                                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-slate-400">
+                                        <div>
+                                            Scan Run : <span className="text-slate-200 font-medium">{scan.uploadedBy?.name || "Unknown"}</span>
+                                        </div>
 
                                         {/* Duration */}
                                         <div className="flex items-center gap-1">

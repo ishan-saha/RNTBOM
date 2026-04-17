@@ -115,7 +115,11 @@ const FailedScans = () => {
                   </div>
 
                   {/* Keep metadata wrapping clean across mobile, tablet, and desktop widths. */}
-                  <div className="flex flex-wrap gap-2 sm:gap-4 text-xs text-slate-400">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-slate-400">
+                    <div>
+                      Scan Run : <span className="text-slate-200 font-medium">{scan.uploadedBy?.name || "Unknown"}</span>
+                    </div>
+
                     <div className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />
                       {getDuration(scan.startedAt, scan.completedAt)}

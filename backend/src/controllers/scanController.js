@@ -2,25 +2,11 @@ const mongoose = require('mongoose');
 const Scan = require('../models/Scan');
 const Report = require('../models/Report');
 const { runScan } = require('../services/scanService');
-
-// ─── helpers ─────────────────────────────────────────────────────────────────
-
-const getOrgId = (user) => {
-    if (!user) return null;
-    const raw = (user.organization && typeof user.organization === 'object')
-        ? user.organization._id
-        : user.organization;
-    try { return new mongoose.Types.ObjectId(raw.toString()); } catch { return raw; }
-};
-
-// regular user → only their own scans
-// admin        → all scans in their organisation
-const buildBaseFilter = (user) => {
-    if (user.role === 'admin') {
-        return { organization: getOrgId(user) };
-    }
-    return { uploadedBy: new mongoose.Types.ObjectId(user._id.toString()) };
-};
+const {
+    getOrgId,
+    buildReadScanFilter,
+    buildOrgScanFilter,
+} = require('../utils/scanAccess');
 
 const detectFormatFromFile = (file) => {
     if (!file) return 'cyclonedx';
@@ -123,7 +109,7 @@ const getScans = async (req, res) => {
     try {
         const { status, scanType, page = 1, limit = 20 } = req.query;
 
-        const filter = buildBaseFilter(req.user);
+        const filter = buildReadScanFilter(req.user);
         if (status)   filter.status   = status;
         if (scanType) filter.scanType = scanType;
 
@@ -152,7 +138,7 @@ const getScans = async (req, res) => {
 // ─── GET BY ID ───────────────────────────────────────────────────────────────
 const getScanById = async (req, res) => {
     try {
-        const filter = buildBaseFilter(req.user);
+        const filter = buildReadScanFilter(req.user);
         filter._id = req.params.id;
 
         const scan = await Scan.findOne(filter)
@@ -196,7 +182,7 @@ const updateScanStatus = async (req, res) => {
         if (reportId)                     update.report         = reportId;
 
         const scan = await Scan.findOneAndUpdate(
-            { _id: id, organization: getOrgId(req.user) },
+            { _id: id, ...buildOrgScanFilter(req.user) },
             { $set: update },
             { new: true, runValidators: true }
         );
@@ -220,7 +206,7 @@ const searchScans = async (req, res) => {
         }
 
         const regex  = new RegExp(q.trim(), 'i');
-        const filter = buildBaseFilter(req.user);
+        const filter = buildReadScanFilter(req.user);
 
         filter.$or = [
             { filename: regex },
@@ -258,9 +244,7 @@ const searchScans = async (req, res) => {
 // ─── STATS ───────────────────────────────────────────────────────────────────
 const getScanStats = async (req, res) => {
     try {
-        const matchFilter = req.user.role === 'admin'
-            ? { organization: new mongoose.Types.ObjectId(getOrgId(req.user).toString()) }
-            : { uploadedBy:   new mongoose.Types.ObjectId(req.user._id.toString()) };
+        const matchFilter = buildReadScanFilter(req.user);
 
         const [statusCounts, vulnAgg] = await Promise.all([
             Scan.aggregate([
@@ -309,7 +293,7 @@ const getScanStats = async (req, res) => {
 // ─── DOWNLOAD PDF REPORT ──────────────────────────────────────────────────────
 const downloadReport = async (req, res) => {
     try {
-        const filter = buildBaseFilter(req.user);
+        const filter = buildReadScanFilter(req.user);
         filter._id = req.params.id;
 
         const scan = await Scan.findOne(filter)
