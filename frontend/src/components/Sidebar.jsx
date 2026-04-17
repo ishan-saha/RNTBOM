@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
     LayoutDashboard,
     Shield,
+    Settings,
     User,
     LogOut,
     Menu,
@@ -129,6 +130,7 @@ const Sidebar = ({ mobileOpen, onCloseMobile }) => {
                                 </p>
                             )}
                             {navItem("/admin", Shield, "Admin Panel")}
+                            {navItem("/admin/settings", Settings, "SEO & SMTP")}
                         </>
                     )}
 

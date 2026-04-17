@@ -10,6 +10,7 @@ import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import DashboardPage from './pages/DashboardPage';
 import AdminPage from './pages/AdminPage';
+import AdminSettingsPage from './pages/AdminSettingsPage';
 import ActiveScans from "./pages/ActiveScans";
 import CompletedScans from "./pages/CompletedScans";
 import FailedScans from './pages/FailedScans';
@@ -84,6 +85,14 @@ const AppLayout = () => {
               element={
                 <PrivateRoute requiredRole="admin">
                   <AdminDashboard />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin/settings"
+              element={
+                <PrivateRoute requiredRole="admin">
+                  <AdminSettingsPage />
                 </PrivateRoute>
               }
             />

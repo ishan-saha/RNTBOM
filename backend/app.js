@@ -65,6 +65,7 @@ const path = require('path');
 const authRoutes = require('./src/routes/authRoutes');
 const userRoutes = require('./src/routes/userRoutes');
 const scanRoutes = require('./src/routes/scanRoutes'); // ✅ NEW
+const adminSettingsRoutes = require('./src/routes/adminSettingsRoutes');
 
 const app = express();
 
@@ -106,6 +107,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/scans', scanRoutes); // ✅ NEW
+app.use('/api/admin', adminSettingsRoutes);
 
 // 404 handler
 app.use((req, res) => {
