@@ -1,6 +1,7 @@
 'use strict';
 
 const PDFDocument = require('pdfkit');
+const path = require('path');
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Page geometry
@@ -11,6 +12,8 @@ const M         = 48;               // left / right margin
 const CW        = PAGE_W - M * 2;  // usable content width
 const FOOTER_H  = 28;              // footer bar height
 const BODY_BOT  = PAGE_H - FOOTER_H - 8; // lowest safe Y for content
+const COVER_LOGO = path.join(__dirname, '..', 'images', 'RNT_report_LOGO.png');
+const PAGE_LOGO  = path.join(__dirname, '..', 'images', 'RNT.png');
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Palette  (mirrors the HTML template colours exactly)
@@ -102,7 +105,7 @@ const drawFooter = (doc) => {
 
     doc.fillColor(C.white).font('Helvetica').fontSize(7)
        .text(
-           'SBOM & CBOM Analysis Report  —  RNT Infosec LLP  —  Confidential',
+           'SBOM Analysis Report - RNT Infosec LLP - Confidential',
            M, PAGE_H - FOOTER_H + 9,
            { width: CW - 30, align: 'left', lineBreak: false },
        );
@@ -115,11 +118,16 @@ const drawFooter = (doc) => {
        );
 };
 
+const drawLogo = (doc, imagePath, x, y, width) => {
+    doc.image(imagePath, x, y, { width });
+};
+
 // Add a fresh interior page (thin top bar + footer) and return starting Y
 const addPage = (doc) => {
     doc.addPage();
     // Very thin top accent line (matches the accent bar feel without consuming space)
     fillRect(doc, 0, 0, PAGE_W, 4, C.brand);
+    drawLogo(doc, PAGE_LOGO, PAGE_W - M - 78, 14, 78);
     drawFooter(doc);
     // CRITICAL: reset cursor to top of content area.
     // drawFooter() moves doc.y to the bottom (~820). If we then try to render
@@ -327,9 +335,9 @@ const generateScanPDF = (scan, report) => {
         info: {
             Title:    `SBOM Report — ${scan.filename || 'Unknown'}`,
             Author:   'RNT Infosec LLP',
-            Subject:  'SBOM & CBOM Security Analysis Report',
+            Subject:  'SBOM Security Analysis Report',
             Creator:  'SBOM Platform v1.0',
-            Keywords: 'SBOM, CBOM, vulnerability, security',
+            Keywords: 'SBOM, vulnerability, security',
         },
     });
 
@@ -365,53 +373,61 @@ const generateScanPDF = (scan, report) => {
        .stroke()
        .restore();
 
-    // Bottom footer contact line
-    fillRect(doc, 0, PAGE_H - 44, PAGE_W, 44, C.brand);
-    doc.fillColor(C.white).font('Helvetica').fontSize(8)
-       .text(
-           '+91 9211770600   |   www.rntinfosec.in   |   project@rntinfosec.in',
-           M + 8, PAGE_H - 28,
-           { width: CW, align: 'left' },
-       );
-
     // Small "SECURITY REPORT" eyebrow label
     const X0 = 26;   // content left edge (right of sidebar)
-    doc.fillColor(C.brand).font('Helvetica-Bold').fontSize(8.5)
-       .text('SECURITY REPORT', X0, 55, {
-           characterSpacing: 3,
-           width: CW,
-       });
+    drawLogo(doc, COVER_LOGO, X0, 42, 112);
+    const coverTitleX = 82;
+    const coverTitleY = 300;
+    const coverTitleW = 230;
 
-    // Main title — very large bold blue
-    doc.fillColor(C.brand).font('Helvetica-Bold').fontSize(46)
-       .text('SOFTWARE BILL', X0, 90,   { width: CW, lineBreak: false });
-    doc.fillColor(C.brand).font('Helvetica-Bold').fontSize(46)
-       .text('OF MATERIALS', X0, 142,  { width: CW, lineBreak: false });
+     doc.fillColor(C.brandDark).font('Helvetica-Bold').fontSize(24)
+         .text('SOFTWARE BILL', coverTitleX, coverTitleY, {
+              width: coverTitleW,
+              align: 'left',
+              lineGap: 1,
+         });
 
-    // Sky-blue accent bar under the main title
-    fillRect(doc, X0, 196, 220, 6, C.sky);
+     doc.fillColor(C.brandDark).font('Helvetica-Bold').fontSize(24)
+         .text('OF MATERIALS', coverTitleX, coverTitleY + 31, {
+              width: coverTitleW,
+              align: 'left',
+              lineGap: 1,
+         });
 
-    // "REPORT" subtitle in sky blue
-    doc.fillColor(C.sky).font('Helvetica-Bold').fontSize(34)
-       .text('REPORT', X0, 210, { width: CW, lineBreak: false });
+     doc.fillColor(C.skyDark).font('Helvetica-Bold').fontSize(19)
+         .text('REPORT', coverTitleX, coverTitleY + 62, {
+              width: coverTitleW,
+              align: 'left',
+              lineGap: 1,
+         });
 
-    // Thin separator
-    fillRect(doc, X0, 268, CW - 20, 1, C.grayBorder);
+     doc.fillColor(C.brand).font('Helvetica').fontSize(9)
+         .text(fmtDate(scan.completedAt || new Date()), X0, PAGE_H - 112, {
+              width: 170,
+              align: 'left',
+              lineBreak: false,
+         });
 
-    // Scan metadata block
-    const coverFields = [
-        ['Prepared For', orgName],
-        ['Date',         fmtDate(scan.completedAt || new Date())],
-        ['Report Type',  'SBOM + CBOM'],
-    ];
-    let my = 282;
-    coverFields.forEach(([k, v]) => {
-        doc.fillColor(C.brand).font('Helvetica-Bold').fontSize(9)
-           .text(`${k}:  `, X0, my, { continued: true, lineBreak: false });
-        doc.fillColor(C.grayDark).font('Helvetica').fontSize(9)
-           .text(v, { lineBreak: false });
-        my += 22;
-    });
+     doc.fillColor(C.brand).font('Helvetica').fontSize(9)
+         .text('+91 9211770600', X0, PAGE_H - 98, {
+              width: 170,
+              align: 'left',
+              lineBreak: false,
+         });
+
+     doc.fillColor(C.brand).font('Helvetica').fontSize(9)
+         .text('www.rntinfosec.in', X0, PAGE_H - 84, {
+              width: 170,
+              align: 'left',
+              lineBreak: false,
+         });
+
+     doc.fillColor(C.brand).font('Helvetica').fontSize(9)
+         .text('project@rntinfosec.in', X0, PAGE_H - 70, {
+              width: 170,
+              align: 'left',
+              lineBreak: false,
+         });
 
     // ═══════════════════════════════════════════════════════ 2. INDEX / TOC ══
     let y = addPage(doc);
@@ -440,9 +456,9 @@ const generateScanPDF = (scan, report) => {
     y = sectionTitle(doc, 'Document Control', y);
 
     y = kvTable(doc, [
-        ['Document Title',    'SBOM & CBOM Analysis Report \u2014 v1.0'],
+        ['Document Title',    'SBOM Analysis Report \u2014 v1.0'],
         ['Document Version',  'v \u2014 1.0'],
-        ['Report Type',       'SBOM + CBOM'],
+        ['Report Type',       'SBOM'],
         ['Classification',    'Confidential'],
         ['Prepared By',       'RNT Infosec LLP \u2014 Automated BOM Analysis Engine'],
         ['Prepared For',      orgName],
@@ -474,7 +490,7 @@ const generateScanPDF = (scan, report) => {
         ['License Compliance',        'Flags components with restrictive or incompatible license terms.'],
         ['Outdated Component Detection', 'Highlights packages with available security patches.'],
         ['Exploit Tracking',          'Identifies components with known public exploits (EPSS / CISA KEV).'],
-        ['CBOM Analysis',             'Maps cryptographic primitives and cipher usage within source code.'],
+        ['SBOM Analysis',             'Maps cryptographic primitives and cipher usage within source code.'],
     ], y);
 
     // ═════════════════════════════════════════════════ 5. THE PROLOGUE ═══════
@@ -553,7 +569,7 @@ const generateScanPDF = (scan, report) => {
         ['Scan Started',       fmtDate(scan.startedAt)],
         ['Scan Completed',     fmtDate(scan.completedAt)],
         ['Format',             (scan.format       || 'CycloneDX').toUpperCase()],
-        ['Report Type',        'SBOM + CBOM'],
+        ['Report Type',        'SBOM'],
         ['Organization',       orgName],
     ], y);
 
@@ -602,8 +618,8 @@ const generateScanPDF = (scan, report) => {
         ['3', 'Vulnerability Lookup',   'Cross-reference components against CVE / NVD / OSV databases.',  'NVD, OSV, GHSA'],
         ['4', 'Exploit Mapping',        'Check for known public exploits via EPSS and CISA KEV.',         'CISA KEV, EPSS'],
         ['5', 'Outdated Detection',     'Compare installed versions against latest stable releases.',      'Package Registries'],
-        ['6', 'CBOM Analysis',          'Identify cryptographic algorithm usage in the source tree.',     'Static Analysis'],
-        ['7', 'Report Generation',      'Compile findings into structured SBOM + CBOM report.',           'Internal Engine'],
+        ['6', 'SBOM Analysis',          'Identify cryptographic algorithm usage in the source tree.',     'Static Analysis'],
+        ['7', 'Report Generation',      'Compile findings into structured SBOM report.',           'Internal Engine'],
     ], y);
 
     // ══════════════════════════════════════ 8. VULNERABILITY DETAILS ══════════
@@ -753,7 +769,7 @@ doc.restore();
 doc.fillColor(C.brand)
    .font('Helvetica-Bold')
    .fontSize(22)
-   .text('R', PAGE_W - 85, 82);
+   .text('', PAGE_W - 85, 82);
 
 // Title
 doc.fillColor(C.brand)
@@ -781,7 +797,7 @@ doc.fillColor(C.grayDark)
       'beyond internal code and dependencies to the entire vendor landscape.\n\n' +
 
       'GuardianDesk streamlines IT operations, asset visibility, privilege workflows, and ' +
-      'compliance management—ensuring that issues identified during SBOM/CBOM analysis are ' +
+      'compliance management—ensuring that issues identified during SBOM analysis are ' +
       'tied into structured remediation, approval, and audit processes. DedZone serves as a high-' +
       'fidelity honeypot and threat-intelligence system, capturing real attack behavior and ' +
       'enabling defensive improvements driven by actual adversary patterns. AntiPen ASM ' +
@@ -791,7 +807,7 @@ doc.fillColor(C.grayDark)
 
       'Together, these systems form a unified security stack: understanding what the code ' +
       'contains, how dependencies behave, what vendors introduce, how attackers probe the ' +
-      'environment, and how operations respond. The SBOM/CBOM analysis in this report forms ' +
+      'environment, and how operations respond. The SBOM analysis in this report forms ' +
       'the foundation for that stack—giving teams the clarity needed to secure their software and ' +
       'maintain trust throughout the lifecycle.',
       M + 20,
@@ -817,7 +833,7 @@ doc.fillColor(C.grayDark)
 
 //     doc.fillColor(C.grayDark).font('Helvetica').fontSize(9).lineGap(4)
 //        .text(
-//            'We sincerely thank you for the opportunity to conduct this SBOM & CBOM analysis engagement.\n' +
+//            'We sincerely thank you for the opportunity to conduct this SBOM analysis engagement.\n' +
 //            'RNT Infosec LLP remains committed to helping organizations strengthen their security posture\n' +
 //            'by identifying vulnerabilities and providing actionable recommendations.',
 //            M + 16, boxY + 58,
