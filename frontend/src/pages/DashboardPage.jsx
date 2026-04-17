@@ -114,7 +114,8 @@
 // export default DashboardPage;
 
 
-import { Shield, Layers, AlertTriangle, Activity, Clock, CheckCircle, XCircle } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Shield, Layers, AlertTriangle, Activity, Clock, CheckCircle, XCircle, Plus } from "lucide-react";
 
 const DashboardPage = () => {
 
@@ -141,10 +142,20 @@ const DashboardPage = () => {
     // Responsive padding: compact on mobile (≤480px), medium on tablet (481-768px), generous on larger screens.
     <div className="p-4 sm:p-6 md:p-8 lg:p-10 bg-[#0f0f1a] min-h-screen text-white">
 
-      {/* Scale heading down on mobile to prevent overflow on ≤480px screens. */}
-      <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
-        Security Dashboard
-      </h1>
+      <div className="mb-4 sm:mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        {/* Scale heading down on mobile to prevent overflow on ≤480px screens. */}
+        <h1 className="text-xl sm:text-2xl font-bold">
+          Security Dashboard
+        </h1>
+
+        <Link
+          to="/scans/new"
+          className="inline-flex items-center justify-center gap-2 self-end sm:self-auto px-4 py-2.5 rounded-xl border border-indigo-500/30 bg-indigo-600/20 text-indigo-300 text-sm font-medium transition-all hover:bg-indigo-600/30 hover:border-indigo-400/40 hover:text-indigo-200 whitespace-nowrap"
+        >
+          <Plus className="w-4 h-4" />
+          Create New Scan
+        </Link>
+      </div>
 
       {/* ===== STATS ===== */}
       {/* 1-col on mobile, 2-col on tablet/medium, 4-col on large desktop. */}

@@ -36,5 +36,6 @@ export const signupUser = (data) => API.post('/auth/signup', data);
 export const loginUser = (data) => API.post('/auth/login', data);
 export const getMe = () => API.get('/auth/me');
 export const getAllUsers = () => API.get('/users/all');
+export const deleteUser = (userId) => API.delete(`/users/${userId}`);
 
 export default API;

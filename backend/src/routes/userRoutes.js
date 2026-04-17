@@ -24,7 +24,9 @@ router.get('/me', protect, async (req, res) => {
 // @access  Private (Admin only)
 router.get('/all', protect, authorize('admin'), async (req, res) => {
   try {
-    const users = await User.find({}).sort({ createdAt: -1 });
+    const users = await User.find({})
+      .populate('organization', 'name')
+      .sort({ createdAt: -1 });
     res.status(200).json({
       success: true,
       count: users.length,

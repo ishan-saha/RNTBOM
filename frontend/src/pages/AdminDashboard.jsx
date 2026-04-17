@@ -1,14 +1,19 @@
-import { Shield, Layers, AlertTriangle, Activity } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Shield, Layers, AlertTriangle, Activity, Plus } from "lucide-react";
 
-const StatCard = ({ icon: Icon, label, value, color }) => (
-    <div className="bg-[#13131f] border border-white/10 rounded-xl p-5 flex items-center gap-4">
-        <Icon className={`w-6 h-6 ${color}`} />
-        <div>
-            <p className="text-xs text-slate-400">{label}</p>
-            <p className="text-lg font-semibold text-white">{value}</p>
+const StatCard = ({ icon, label, value, color }) => {
+    const Icon = icon;
+
+    return (
+        <div className="bg-[#13131f] border border-white/10 rounded-xl p-5 flex items-center gap-4">
+            <Icon className={`w-6 h-6 ${color}`} />
+            <div>
+                <p className="text-xs text-slate-400">{label}</p>
+                <p className="text-lg font-semibold text-white">{value}</p>
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 const AdminDashboard = () => {
     const stats = [
@@ -28,10 +33,20 @@ const AdminDashboard = () => {
         // Responsive padding: tight on mobile (≤480px), medium on tablet, generous on desktop (≥1025px).
         <div className="p-4 sm:p-6 md:p-8 lg:p-10 bg-[#0f0f1a] min-h-screen text-white">
 
-            {/* Scale heading down on small screens to avoid horizontal overflow at ≤480px. */}
-            <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
-                Admin Security Dashboard
-            </h1>
+            <div className="mb-4 sm:mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                {/* Scale heading down on small screens to avoid horizontal overflow at ≤480px. */}
+                <h1 className="text-xl sm:text-2xl font-bold">
+                    Admin Security Dashboard
+                </h1>
+
+                <Link
+                    to="/scans/new"
+                    className="inline-flex items-center justify-center gap-2 self-end sm:self-auto px-4 py-2.5 rounded-xl border border-indigo-500/30 bg-indigo-600/20 text-indigo-300 text-sm font-medium transition-all hover:bg-indigo-600/30 hover:border-indigo-400/40 hover:text-indigo-200 whitespace-nowrap"
+                >
+                    <Plus className="w-4 h-4" />
+                    Create New Scan
+                </Link>
+            </div>
 
             {/* Stats */}
             {/* 1-col on mobile, 2-col on tablet, 4-col on large desktop to prevent card overflow. */}
