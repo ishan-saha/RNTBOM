@@ -1,7 +1,8 @@
 ﻿
 // by mukesh bhai
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import Loader from "../components/ui/Loader";
 import { useParams, useNavigate } from "react-router-dom";
 import {
     ArrowLeft, Shield, AlertTriangle, CheckCircle,
@@ -96,11 +97,7 @@ const ScanDetailPage = () => {
     }, [id]);
 
     if (loading) {
-        return (
-            <div className="p-10 bg-[#0f0f1a] min-h-screen text-white flex items-center justify-center">
-                <p className="text-slate-400 animate-pulse">Loading scan report...</p>
-            </div>
-        );
+        return <Loader />;
     }
 
     if (error) {

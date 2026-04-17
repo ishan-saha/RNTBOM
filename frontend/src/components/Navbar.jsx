@@ -28,9 +28,11 @@ const Navbar = ({ onOpenMobileSidebar }) => {
               <Shield className="w-5 h-5 text-indigo-400" />
             </div>
             {/* Slightly downscale the brand text on very small screens to prevent crowding. */}
-            <span className="font-bold text-base sm:text-lg text-white tracking-tight">
-              SBOM<span className="text-indigo-400">Auth</span>
-            </span>
+            <div className="flex items-center">
+              <div className="p-1.5 bg-gradient-to-br from-indigo-600/10 to-purple-600/10 rounded-md">
+                <img src="/RNTlogo.jpg" alt="RNT" className="h-6 sm:h-7 w-auto block" />
+              </div>
+            </div>
             </Link>
           </div>
 

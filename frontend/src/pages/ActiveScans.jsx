@@ -164,6 +164,7 @@
 import { useEffect, useState } from "react";
 import { Clock, AlertCircle, CheckCircle } from "lucide-react";
 import API from "../api/auth";
+import Loader from "../components/ui/Loader";
 
 const ActiveScans = () => {
     const [scans, setScans] = useState([]);
@@ -227,7 +228,7 @@ const ActiveScans = () => {
             </h1>
 
             {loading ? (
-                <p className="text-slate-400">Loading scans...</p>
+                <Loader />
             ) : scans.length === 0 ? (
                 <p className="text-slate-400">No active scans</p>
             ) : (

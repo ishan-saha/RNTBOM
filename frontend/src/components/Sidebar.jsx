@@ -62,9 +62,9 @@ const Sidebar = ({ mobileOpen, onCloseMobile }) => {
             >
                 {/* Use separate close/collapse actions for mobile vs desktop to keep controls intuitive by screen size. */}
                 <div className="flex items-center justify-between p-4">
-                    <h1 className={`text-white font-semibold ${desktopExpanded ? "md:inline" : "md:hidden"} inline`}>
-                        SBOM
-                    </h1>
+                    <div className={`inline-flex items-center p-1.5 bg-gradient-to-br from-indigo-600/10 to-purple-600/10 rounded-md ${desktopExpanded ? "md:inline" : "md:hidden"} inline`}>
+                        <img src="/RNTlogo.jpg" alt="RNT" className="h-7 w-auto block" />
+                    </div>
 
                     <div className="flex items-center gap-2">
                         <button
