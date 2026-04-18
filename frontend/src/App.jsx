@@ -28,7 +28,7 @@ const AppLayout = () => {
   // Hide sidebar & navbar on auth pages
   const hideLayout = ['/login', '/signup'].includes(location.pathname);
 
-  // Close the mobile drawer after route changes so content is immediately visible on small screens.
+  // Close the mobile drawer after route changes so content is immediately visible on small screens. ok
   const closeMobileSidebar = () => setMobileSidebarOpen(false);
 
   return (
