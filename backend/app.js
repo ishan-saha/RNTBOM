@@ -24,6 +24,11 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // ✅ Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// ✅ Serve built frontend in production (placed before routes so static assets bypass them)
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../frontend/dist')));
+}
+
 // Health check
 app.get('/', (req, res) => {
   res.json({
@@ -51,6 +56,14 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/scans', scanRoutes); // ✅ NEW
 app.use('/api/admin', adminSettingsRoutes);
+
+// ✅ SPA catch-all: serve index.html for any non-API client-side route in production
+if (process.env.NODE_ENV === 'production') {
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) return next();
+    res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
+  });
+}
 
 // 404 handler
 app.use((req, res) => {
