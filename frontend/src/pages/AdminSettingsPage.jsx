@@ -1,4 +1,4 @@
-// These codes are for SEO & SMTP mails - start
+
 
 import { useEffect, useRef, useState } from 'react';
 import API from '../api/auth';
@@ -687,92 +687,7 @@ export default function AdminSettingsPage() {
               </div>
             </div>
 
-            {/* <div className={`${panelClass} mt-6`}>
-              <div className="p-6 sm:p-8">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
-                  <div>
-                    <h2 className="text-xl font-black text-white">SMTP Registry</h2>
-                    <p className="text-sm text-slate-400 mt-1">Stored SMTP configurations for sending test messages</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                      <input
-                        type="text"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search configs"
-                        className="pl-9 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder-slate-500 outline-none focus:border-indigo-500"
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => refreshEmailConfigs(selectedEmailConfigId)}
-                      className="w-11 h-11 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-slate-200 transition-colors"
-                    >
-                      <RefreshCcw size={18} />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  {filteredConfigs.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 p-8 text-center text-sm font-medium text-slate-400">
-                      No SMTP configurations saved yet.
-                    </div>
-                  ) : (
-                    filteredConfigs.map((configItem) => (
-                      <div
-                        key={configItem._id}
-                        className={`p-4 rounded-2xl border transition-colors ${selectedEmailConfigId === configItem._id ? 'border-indigo-500/30 bg-indigo-500/10' : 'border-white/8 bg-white/5'}`}
-                      >
-                        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                          <button type="button" onClick={() => fetchEmailConfigDetail(configItem._id, configItem)} className="text-left flex-1">
-                            <div className="flex items-center gap-3 flex-wrap">
-                              <h3 className="font-black text-white text-sm tracking-tight">
-                                {configItem.provider} · {configItem.host}
-                              </h3>
-                              {configItem.isActive && (
-                                <span className={`${pillClass} bg-emerald-500/15 text-emerald-300 border border-emerald-500/20`}>
-                                  Active
-                                </span>
-                              )}
-                              <span className={`${pillClass} bg-white/10 text-slate-300 border border-white/10`}>
-                                {configItem.passwordStatus || 'configured'}
-                              </span>
-                            </div>
-                            <p className="text-xs text-slate-400 font-medium mt-2">
-                              {configItem.fromName || 'No from name'} · {configItem.fromEmail || 'No from email'} · Port {configItem.port}
-                            </p>
-                          </button>
-
-                          <div className="flex items-center gap-3 flex-wrap">
-                            <button
-                              type="button"
-                              onClick={() => handleActivateToggle(configItem)}
-                              disabled={isActionLoading(configItem._id)}
-                              className={`h-10 px-4 rounded-xl font-black uppercase tracking-widest text-[10px] transition-colors flex items-center gap-2 ${configItem.isActive ? 'bg-amber-500/15 text-amber-300 hover:bg-amber-500/20 border border-amber-500/20' : 'bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/20 border border-emerald-500/20'}`}
-                            >
-                              {isActionLoading(configItem._id) ? <Loader2 className="w-4 h-4 animate-spin" /> : <Power size={14} />}
-                              <span>{configItem.isActive ? 'Disable' : 'Enable'}</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteEmailConfig(configItem)}
-                              disabled={isActionLoading(configItem._id)}
-                              className="h-10 px-4 rounded-xl bg-rose-500/15 text-rose-300 hover:bg-rose-500/20 border border-rose-500/20 font-black uppercase tracking-widest text-[10px] transition-colors flex items-center gap-2"
-                            >
-                              {isActionLoading(configItem._id) ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 size={14} />}
-                              <span>Delete</span>
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div> */}
+            
           </>
         )}
       </div>

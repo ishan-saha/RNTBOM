@@ -27,29 +27,8 @@ const LoginPage = () => {
     return errs;
   };
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   const errs = validate();
-  //   if (Object.keys(errs).length > 0) { setErrors(errs); return; }
-
-  //   setLoading(true);
-  //   try {
-  //     const res = await loginUser(formData);
-  //     login(res.data.data.user, res.data.data.token);
-  //     toast.success(`Welcome back, ${res.data.user.name}! 👋`);
-  //     navigate(res.data.user.role === 'admin' ? '/admin' : '/dashboard');
-  //   } catch (err) {
-  //     const msg = err.response?.data?.message || 'Login failed. Please try again.';
-  //     toast.error(msg);
-  //     if (err.response?.data?.errors) {
-  //       const fieldErrors = {};
-  //       err.response.data.errors.forEach(e => { fieldErrors[e.field] = e.message; });
-  //       setErrors(fieldErrors);
-  //     }
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+  
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
