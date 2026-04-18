@@ -57,17 +57,17 @@ const ScanSchema = new mongoose.Schema(
         //     type: String,
         //     default: '',
         // },
-//         source: {
-//   image: { type: String },
-//   link: { type: String }
-// },
+        //         source: {
+        //   image: { type: String },
+        //   link: { type: String }
+        // },
 
-source: {
-  filePath: String,
-  repoUrl: String,
-  image: String,
-  link: String
-},
+        source: {
+        filePath: String,
+        repoUrl: String,
+        image: String,
+        link: String
+        },
 
         // ⚡ Status
         status: {

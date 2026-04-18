@@ -2,25 +2,11 @@ const mongoose = require('mongoose');
 const Scan = require('../models/Scan');
 const Report = require('../models/Report');
 const { runScan } = require('../services/scanService');
-
-// ─── helpers ─────────────────────────────────────────────────────────────────
-
-const getOrgId = (user) => {
-    if (!user) return null;
-    const raw = (user.organization && typeof user.organization === 'object')
-        ? user.organization._id
-        : user.organization;
-    try { return new mongoose.Types.ObjectId(raw.toString()); } catch { return raw; }
-};
-
-// regular user → only their own scans
-// admin        → all scans in their organisation
-const buildBaseFilter = (user) => {
-    if (user.role === 'admin') {
-        return { organization: getOrgId(user) };
-    }
-    return { uploadedBy: new mongoose.Types.ObjectId(user._id.toString()) };
-};
+const {
+    getOrgId,
+    buildReadScanFilter,
+    buildOrgScanFilter,
+} = require('../utils/scanAccess');
 
 const detectFormatFromFile = (file) => {
     if (!file) return 'cyclonedx';
@@ -60,12 +46,12 @@ const createScan = async (req, res) => {
 
         if (sourceType === 'upload') {
             if (!req.file) return res.status(400).json({ success: false, message: 'File not received. Please upload again.' });
-            sourceValue = req.file.path;
+            sourceValue = { filePath: req.file.path };
             format = detectFormatFromFile(req.file);
         }
         if (sourceType === 'github') {
             if (!repoUrl?.trim()) return res.status(400).json({ success: false, message: 'Git repository URL is required.' });
-            sourceValue = repoUrl.trim();
+            sourceValue = { repoUrl: repoUrl.trim() };
         }
         // if (sourceType === 'docker') {
         //     if (!imageName?.trim()) return res.status(400).json({ success: false, message: 'Docker image name is required.' });
@@ -123,7 +109,7 @@ const getScans = async (req, res) => {
     try {
         const { status, scanType, page = 1, limit = 20 } = req.query;
 
-        const filter = buildBaseFilter(req.user);
+        const filter = buildReadScanFilter(req.user);
         if (status)   filter.status   = status;
         if (scanType) filter.scanType = scanType;
 
@@ -152,7 +138,7 @@ const getScans = async (req, res) => {
 // ─── GET BY ID ───────────────────────────────────────────────────────────────
 const getScanById = async (req, res) => {
     try {
-        const filter = buildBaseFilter(req.user);
+        const filter = buildReadScanFilter(req.user);
         filter._id = req.params.id;
 
         const scan = await Scan.findOne(filter)
@@ -196,7 +182,7 @@ const updateScanStatus = async (req, res) => {
         if (reportId)                     update.report         = reportId;
 
         const scan = await Scan.findOneAndUpdate(
-            { _id: id, organization: getOrgId(req.user) },
+            { _id: id, ...buildOrgScanFilter(req.user) },
             { $set: update },
             { new: true, runValidators: true }
         );
@@ -220,7 +206,7 @@ const searchScans = async (req, res) => {
         }
 
         const regex  = new RegExp(q.trim(), 'i');
-        const filter = buildBaseFilter(req.user);
+        const filter = buildReadScanFilter(req.user);
 
         filter.$or = [
             { filename: regex },
@@ -258,9 +244,7 @@ const searchScans = async (req, res) => {
 // ─── STATS ───────────────────────────────────────────────────────────────────
 const getScanStats = async (req, res) => {
     try {
-        const matchFilter = req.user.role === 'admin'
-            ? { organization: new mongoose.Types.ObjectId(getOrgId(req.user).toString()) }
-            : { uploadedBy:   new mongoose.Types.ObjectId(req.user._id.toString()) };
+        const matchFilter = buildReadScanFilter(req.user);
 
         const [statusCounts, vulnAgg] = await Promise.all([
             Scan.aggregate([
@@ -306,6 +290,48 @@ const getScanStats = async (req, res) => {
     }
 };
 
+// ─── DOWNLOAD PDF REPORT ──────────────────────────────────────────────────────
+const downloadReport = async (req, res) => {
+    try {
+        const filter = buildReadScanFilter(req.user);
+        filter._id = req.params.id;
+
+        const scan = await Scan.findOne(filter)
+            .populate('uploadedBy', 'name email')
+            .populate('organization', 'name')
+            .populate('report');
+
+        if (!scan) {
+            return res.status(404).json({ success: false, message: 'Scan not found.' });
+        }
+
+        if (scan.status !== 'completed') {
+            return res.status(400).json({
+                success: false,
+                message: 'PDF report is only available for completed scans.',
+            });
+        }
+
+        const { generateScanPDF } = require('../utils/pdfGenerator');
+        const doc = generateScanPDF(scan, scan.report);
+
+        const safeName = (scan.filename || 'report')
+            .replace(/[^a-zA-Z0-9_-]/g, '_')
+            .slice(0, 50);
+        const filename = `SBOM_Report_${safeName}.pdf`;
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+        doc.pipe(res);
+    } catch (error) {
+        console.error('PDF download error:', error);
+        if (!res.headersSent) {
+            res.status(500).json({ success: false, message: 'Failed to generate PDF report.' });
+        }
+    }
+};
+
 // ─── EXPORTS ─────────────────────────────────────────────────────────────────
 module.exports = {
     createScan,
@@ -314,4 +340,5 @@ module.exports = {
     updateScanStatus,
     searchScans,
     getScanStats,
+    downloadReport,
 };

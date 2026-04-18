@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Baked into the frontend bundle at build time.
+        # In single-container mode the frontend is served from the same origin,
+        # so /api is sufficient. Override if needed:
+        #   VITE_API_URL: https://yourdomain.com/api
+        VITE_API_URL: /api
+    container_name: sbom_app
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8000}:${PORT:-8000}"
+    env_file:
+      # Drop a .env file in /backend (or root) with your secrets.
+      # Required keys: MONGO_URI, JWT_SECRET, PORT, NODE_ENV=production
+      - ./backend/.env
+    environment:
+      - NODE_ENV=production
+    volumes:
+      # Persist uploaded files across container restarts
+      - uploads_data:/app/backend/uploads
+      # Persist temp scan data across restarts
+      - temp_data:/app/backend/temp
+
+volumes:
+  uploads_data:
+  temp_data:

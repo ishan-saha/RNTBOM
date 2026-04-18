@@ -1,0 +1,30 @@
+# Dependencies — never copy these; they're built inside the container
+**/node_modules
+
+# Version control
+**/.git
+**/.gitignore
+
+# Built output — rebuilt inside container
+**/dist
+
+# Backend runtime artifacts
+backend/temp
+backend/uploads
+
+# Test output
+**/coverage
+
+# Environment files — pass secrets at runtime via --env-file or -e flags
+# NEVER bake secrets into the image
+**/.env
+**/.env.*
+
+# Logs
+**/*.log
+npm-debug.log*
+
+# OS / editor noise
+.DS_Store
+**/.DS_Store
+Thumbs.db

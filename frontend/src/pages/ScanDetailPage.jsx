@@ -1,10 +1,15 @@
-import { useEffect, useState } from "react";
+﻿
+// by mukesh bhai
+
+import { useEffect, useState, useRef } from "react";
+import Loader from "../components/ui/Loader";
 import { useParams, useNavigate } from "react-router-dom";
 import {
     ArrowLeft, Shield, AlertTriangle, CheckCircle,
-    Clock, Package, FileText, XCircle
+    Clock, Package, FileText, XCircle, Download
 } from "lucide-react";
 import API from "../api/auth";
+import toast from "react-hot-toast";
 
 // ── Severity badge ────────────────────────────────────────────────────────────
 const SeverityBadge = ({ severity }) => {
@@ -55,6 +60,27 @@ const ScanDetailPage = () => {
     const [scan, setScan] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [pdfLoading, setPdfLoading] = useState(false);
+
+    // ── Download PDF via backend ──────────────────────────────────────────────
+    const handleDownloadPDF = async () => {
+        setPdfLoading(true);
+        try {
+            const res = await API.get(`/scans/${id}/report/pdf`, { responseType: 'blob' });
+            const url = URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `SBOM_Report_${id}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        } catch {
+            toast.error('Failed to download PDF report. Please try again.');
+        } finally {
+            setPdfLoading(false);
+        }
+    };
 
     useEffect(() => {
         const fetchScan = async () => {
@@ -71,11 +97,7 @@ const ScanDetailPage = () => {
     }, [id]);
 
     if (loading) {
-        return (
-            <div className="p-10 bg-[#0f0f1a] min-h-screen text-white flex items-center justify-center">
-                <p className="text-slate-400 animate-pulse">Loading scan report...</p>
-            </div>
-        );
+        return <Loader />;
     }
 
     if (error) {
@@ -91,6 +113,20 @@ const ScanDetailPage = () => {
     const report = scan?.report;
     const components = report?.components || [];
     const vulnerabilities = report?.vulnerabilities || [];
+    const now = new Date();
+    const formatDate = (date) => new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+    // ── shared table style helpers (matches ReportDownload.jsx) ──
+    const TH = "px-3 py-2 text-left text-xs font-semibold text-white bg-[#2b2bb2] border border-[#1f1f8a]";
+    const TD = "px-3 py-2 text-xs text-gray-800 border border-gray-200";
+    const TDalt = "px-3 py-2 text-xs text-gray-800 border border-gray-200 bg-gray-50";
+
+    const SectionTitle = ({ children }) => (
+        <div className="mb-4">
+            <h2 className="text-2xl font-bold text-[#2b2bb2]">{children}</h2>
+            <div className="h-0.5 bg-[#2b2bb2] mt-1 rounded" />
+        </div>
+    );
 
     return (
         <div className="p-6 md:p-10 bg-[#0f0f1a] min-h-screen text-white">
@@ -113,6 +149,24 @@ const ScanDetailPage = () => {
                 <span className="text-xs px-2 py-0.5 rounded border border-purple-500/30 bg-purple-500/10 text-purple-400 uppercase">
                     CycloneDX
                 </span>
+                {/* ── Download Report button ── */}
+                <button
+                    onClick={handleDownloadPDF}
+                    disabled={pdfLoading}
+                    className="ml-auto flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm font-semibold shadow transition"
+                >
+                    {pdfLoading ? (
+                        <>
+                            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
+                            Generating...
+                        </>
+                    ) : (
+                        <>
+                            <Download className="w-4 h-4" />
+                            Download Report
+                        </>
+                    )}
+                </button>
             </div>
 
             {/* Meta row */}
@@ -256,3 +310,14 @@ const ScanDetailPage = () => {
 };
 
 export default ScanDetailPage;
+
+
+
+
+
+
+
+
+
+
+ 

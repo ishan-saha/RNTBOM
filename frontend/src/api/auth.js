@@ -1,5 +1,8 @@
 import axios from 'axios';
-const baseUrl = 'http://localhost:8000/api';
+
+// In production (served from backend), use relative path so requests go to same origin.
+// In development, Vite proxy handles /api → backend. Override via VITE_API_URL if needed.
+const baseUrl = import.meta.env.VITE_API_URL || '/api';
 
 const API = axios.create({
   baseURL: baseUrl,
@@ -36,5 +39,6 @@ export const signupUser = (data) => API.post('/auth/signup', data);
 export const loginUser = (data) => API.post('/auth/login', data);
 export const getMe = () => API.get('/auth/me');
 export const getAllUsers = () => API.get('/users/all');
+export const deleteUser = (userId) => API.delete(`/users/${userId}`);
 
 export default API;
