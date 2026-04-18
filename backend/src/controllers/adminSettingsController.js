@@ -1,10 +1,20 @@
 'use strict';
 
 const crypto = require('crypto');
+const path = require('path');
 const nodemailer = require('nodemailer');
 
 const EmailConfig = require('../models/EmailConfig');
 const SeoSetting = require('../models/SeoSetting');
+
+const DEFAULT_EMAIL_PROVIDER = process.env.SMTP_PROVIDER || 'mailtrap';
+const DEFAULT_EMAIL_HOST = process.env.SMTP_HOST || 'sandbox.smtp.mailtrap.io';
+const DEFAULT_EMAIL_PORT = Number(process.env.SMTP_PORT || 2525);
+const DEFAULT_EMAIL_SECURE = String(process.env.SMTP_SECURE || 'false').toLowerCase() === 'true';
+const DEFAULT_EMAIL_USERNAME = process.env.SMTP_EMAIL_USERNAME || '';
+const DEFAULT_EMAIL_PASSWORD = process.env.SMTP_EMAIL_PASSWORD || '';
+const DEFAULT_EMAIL_FROM_NAME = process.env.SMTP_FROM_NAME || 'SBOM Full Security Team';
+const DEFAULT_EMAIL_FROM_EMAIL = process.env.SMTP_FROM_EMAIL || 'noreply@sbom-full.local';
 
 const AES_KEY = crypto
   .createHash('sha256')
@@ -50,18 +60,126 @@ const normalizeKeywords = (keywords) => {
 
 const sanitizeEmailConfig = (configDoc) => configDoc.toJSON();
 
+const escapeHtml = (value) =>
+  String(value || '')
+    .trim()
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/\n/g, '<br />');
+
+const buildBrandedEmailTemplate = ({ username, body }) => {
+  const safeUsername = escapeHtml(username || 'there');
+  const safeBody = escapeHtml(body || 'This is a test email from the SEO & SMTP admin settings page.');
+
+  return `
+    <div style="font-family:Arial,Helvetica,sans-serif;background:#0f0f1a;padding:24px;color:#e5e7eb;">
+      <div style="max-width:680px;margin:0 auto;background:#13131f;border:1px solid rgba(255,255,255,0.08);border-radius:22px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.35);">
+        <div style="padding:24px 28px;border-bottom:1px solid rgba(255,255,255,0.06);background:linear-gradient(135deg,rgba(79,70,229,0.18),rgba(56,189,248,0.08));display:flex;align-items:center;gap:16px;">
+          <img src="cid:rnt-logo" alt="RNT Infosec LLP" style="width:72px;height:72px;object-fit:contain;border-radius:18px;background:rgba(255,255,255,0.06);padding:10px;border:1px solid rgba(255,255,255,0.08);" />
+          <div>
+            <div style="font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:#94a3b8;font-weight:700;">RNT Infosec LLP</div>
+            <h2 style="margin:10px 0 0;font-size:24px;line-height:1.3;color:#ffffff;">Hey, your test is completed.</h2>
+          </div>
+        </div>
+        <div style="padding:28px;">
+          <p style="margin:0 0 16px;font-size:14px;line-height:1.8;color:#cbd5e1;">The message below was submitted from the Admin Settings page and delivered using the SMTP credentials provided by the administrator.</p>
+          <div style="margin:0 0 18px;padding:18px 20px;border-radius:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);font-size:14px;line-height:1.8;color:#f8fafc;">
+            ${safeBody}
+          </div>
+          <div style="margin-top:24px;padding:16px 18px;border-radius:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);font-size:13px;line-height:1.8;color:#cbd5e1;">
+            <strong style="color:#ffffff;">RNT Infosec LLP</strong> sends this message as confirmation that your scan is completed.
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+};
+
+const getBrandedLogoAttachment = () => ({
+  filename: 'RNT_report_LOGO.png',
+  path: path.join(__dirname, '..', 'images', 'RNT_report_LOGO.png'),
+  cid: 'rnt-logo',
+});
+
+const getSeedEmailConfig = () => ({
+  provider: DEFAULT_EMAIL_PROVIDER,
+  host: DEFAULT_EMAIL_HOST,
+  port: DEFAULT_EMAIL_PORT,
+  secure: DEFAULT_EMAIL_SECURE,
+  username: DEFAULT_EMAIL_USERNAME,
+  password: DEFAULT_EMAIL_PASSWORD,
+  fromName: DEFAULT_EMAIL_FROM_NAME,
+  fromEmail: DEFAULT_EMAIL_FROM_EMAIL,
+  isActive: true,
+});
+
+const ensureDefaultEmailConfig = async () => {
+  const configCount = await EmailConfig.countDocuments();
+
+  if (configCount > 0 || !DEFAULT_EMAIL_USERNAME || !DEFAULT_EMAIL_PASSWORD) {
+    return null;
+  }
+
+  const existing = await EmailConfig.findOne({
+    provider: DEFAULT_EMAIL_PROVIDER,
+    host: DEFAULT_EMAIL_HOST,
+    username: DEFAULT_EMAIL_USERNAME,
+  }).select('+password');
+
+  if (existing) {
+    return existing;
+  }
+
+  const created = await EmailConfig.create({
+    ...getSeedEmailConfig(),
+    password: encryptSecret(DEFAULT_EMAIL_PASSWORD),
+  });
+
+  return created;
+};
+
 const buildEmailTransport = (configDoc) => {
-  const password = decryptSecret(configDoc.password);
+  const password = decryptSecret(configDoc.password) || DEFAULT_EMAIL_PASSWORD;
 
   return nodemailer.createTransport({
-    host: configDoc.host,
-    port: Number(configDoc.port),
-    secure: Boolean(configDoc.secure),
+    host: configDoc.host || DEFAULT_EMAIL_HOST,
+    port: Number(configDoc.port || DEFAULT_EMAIL_PORT),
+    secure: Boolean(configDoc.secure ?? DEFAULT_EMAIL_SECURE),
     auth: {
-      user: configDoc.username,
+      user: configDoc.username || DEFAULT_EMAIL_USERNAME,
       pass: password,
     },
   });
+};
+
+const buildTransportFromPayload = (payload = {}) => {
+  const provider = String(payload.provider || DEFAULT_EMAIL_PROVIDER).trim().toLowerCase();
+  const host = String(payload.host || (provider === 'gmail' ? 'smtp.gmail.com' : DEFAULT_EMAIL_HOST)).trim();
+  const port = Number(payload.port || (provider === 'gmail' ? 587 : DEFAULT_EMAIL_PORT));
+  const secure = payload.secure !== undefined ? Boolean(payload.secure) : provider === 'gmail';
+  const username = String(payload.username || '').trim();
+  const password = String(payload.password || '').trim();
+
+  if (!username || !password) {
+    const error = new Error('Username and password are required to send email.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return {
+    transporter: nodemailer.createTransport({
+      host,
+      port,
+      secure,
+      auth: { user: username, pass: password },
+    }),
+    fromName: String(payload.fromName || '').trim(),
+    fromEmail: String(payload.fromEmail || '').trim(),
+    provider,
+  };
 };
 
 const listEmailConfigs = async (req, res) => {
@@ -232,7 +350,7 @@ const deactivateEmailConfig = async (req, res) => {
 
 const testEmailConfig = async (req, res) => {
   try {
-    const { recipient } = req.body;
+    const { recipient, subject, body } = req.body;
 
     if (!recipient || !String(recipient).trim()) {
       return res.status(400).json({ success: false, message: 'Recipient email is required.' });
@@ -246,16 +364,69 @@ const testEmailConfig = async (req, res) => {
 
     const transporter = buildEmailTransport(config);
     await transporter.sendMail({
-      from: `"${config.fromName}" <${config.fromEmail || config.username}>`,
+      from: `"${config.fromName || DEFAULT_EMAIL_FROM_NAME}" <${config.fromEmail || config.username || DEFAULT_EMAIL_FROM_EMAIL}>`,
       to: String(recipient).trim(),
-      subject: 'SMTP Test Email',
-      text: 'This is a test email from the SEO & SMTP admin settings page.',
-      html: '<p>This is a test email from the SEO & SMTP admin settings page.</p>',
+      subject: String(subject || 'SMTP Test Email').trim(),
+      text:
+        String(body || '').trim() ||
+        'This is a test email from the SEO & SMTP admin settings page.',
+      html: `<p>${String(body || 'This is a test email from the SEO & SMTP admin settings page.')
+        .trim()
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\n/g, '<br />')}</p>`,
     });
 
     res.status(200).json({ success: true, message: 'Test email sent successfully.' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to send test email.' });
+  }
+};
+
+const sendInlineEmail = async (req, res) => {
+  try {
+    const { recipient, subject, body, provider, host, port, secure, username, password, fromName, fromEmail } = req.body;
+
+    if (!recipient || !String(recipient).trim()) {
+      return res.status(400).json({ success: false, message: 'Recipient email is required.' });
+    }
+
+    const { transporter, fromName: safeFromName, fromEmail: safeFromEmail } = buildTransportFromPayload({
+      provider,
+      host,
+      port,
+      secure,
+      username,
+      password,
+      fromName,
+      fromEmail,
+    });
+
+    const resolvedFromEmail = safeFromEmail || username;
+
+    if (!resolvedFromEmail) {
+      return res.status(400).json({ success: false, message: 'From email is required.' });
+    }
+
+    await transporter.sendMail({
+      from: `"${safeFromName || DEFAULT_EMAIL_FROM_NAME}" <${resolvedFromEmail}>`,
+      to: String(recipient).trim(),
+      subject: String(subject || 'SMTP Test Email').trim(),
+      text: `Hey ${String(username || 'there').trim()}, your test is completed.\n\n${String(body || '').trim() || 'This is a test email from the SEO & SMTP admin settings page.'}\n\nThanks,\nRNT Infosec LLP`,
+      html: buildBrandedEmailTemplate({
+        username,
+        body: String(body || '').trim() || 'This is a test email from the SEO & SMTP admin settings page.',
+      }),
+      attachments: [getBrandedLogoAttachment()],
+    });
+
+    res.status(200).json({ success: true, message: 'Test email sent successfully.' });
+  } catch (error) {
+    res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || 'Failed to send test email.',
+    });
   }
 };
 
@@ -363,6 +534,7 @@ module.exports = {
   activateEmailConfig,
   deactivateEmailConfig,
   testEmailConfig,
+  sendInlineEmail,
   listSeoSettings,
   getSeoSettingById,
   createSeoSetting,

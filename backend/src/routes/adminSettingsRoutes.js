@@ -11,6 +11,7 @@ const {
   activateEmailConfig,
   deactivateEmailConfig,
   testEmailConfig,
+  sendInlineEmail,
   listSeoSettings,
   getSeoSettingById,
   createSeoSetting,
@@ -28,6 +29,7 @@ router.put('/email-configs/:id', updateEmailConfig);
 router.patch('/email-configs/:id/activate', activateEmailConfig);
 router.patch('/email-configs/:id/deactivate', deactivateEmailConfig);
 router.post('/email-configs/:id/test', testEmailConfig);
+router.post('/email-configs/test', sendInlineEmail);
 router.delete('/email-configs/:id', deleteEmailConfig);
 
 router.get('/seo', listSeoSettings);
