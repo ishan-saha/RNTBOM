@@ -1,10 +1,18 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, Clock, FileWarning, RefreshCw, XCircle } from "lucide-react";
+import {
+  AlertTriangle,
+  Clock,
+  FileWarning,
+  RefreshCw,
+  XCircle,
+} from "lucide-react";
+import { useTheme } from "../context/ThemeContext";
 import { useNavigate } from "react-router-dom";
 import API from "../api/auth";
 import { Loader } from "../components/ui/Loader";
 
 const FailedScans = () => {
+  const { isDark } = useTheme();
   const [scans, setScans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dataFetched, setDataFetched] = useState(false);
@@ -50,13 +58,16 @@ const FailedScans = () => {
   const showLoader = loading && !dataFetched;
 
   return (
-    <div className="p-4 sm:p-6 md:p-8 lg:p-10 bg-[#0f0f1a] min-h-screen text-white">
-
+    <div
+      className={`p-4 sm:p-6 md:p-8 lg:p-10 ${isDark ? "bg-[#0f0f1a]" : "bg-[#f1f5f9]"} min-h-screen text-white`}
+    >
       {/* Keep loading consistent with the rest of the scan pages while failed scans are fetched. */}
       {showLoader && <Loader />}
 
       {/* Fade the failed scans content in after the initial loader clears. */}
-      <div className={`transition-opacity duration-500 ${showLoader ? "opacity-0" : "opacity-100"}`}>
+      <div
+        className={`transition-opacity duration-500 ${showLoader ? "opacity-0" : "opacity-100"}`}
+      >
         {/* Use the alert header styling so the page clearly differentiates failed scans from completed ones. */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
           <div>
@@ -65,7 +76,8 @@ const FailedScans = () => {
               Failed Scans
             </h1>
             <p className="text-slate-400 text-sm mt-1">
-              Review scans that terminated with errors and inspect failure details.
+              Review scans that terminated with errors and inspect failure
+              details.
             </p>
           </div>
 
@@ -90,9 +102,12 @@ const FailedScans = () => {
             <div className="mx-auto mb-4 flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20">
               <AlertTriangle className="w-5 h-5 text-emerald-400" />
             </div>
-            <h2 className="text-lg font-semibold text-white">No failed scans</h2>
+            <h2 className="text-lg font-semibold text-white">
+              No failed scans
+            </h2>
             <p className="text-slate-400 text-sm mt-2">
-              Failed scan jobs will appear here when a scan cannot complete successfully.
+              Failed scan jobs will appear here when a scan cannot complete
+              successfully.
             </p>
           </div>
         ) : (
@@ -117,7 +132,10 @@ const FailedScans = () => {
                   {/* Keep metadata wrapping clean across mobile, tablet, and desktop widths. */}
                   <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-slate-400">
                     <div>
-                      Scan Run : <span className="text-slate-200 font-medium">{scan.uploadedBy?.name || "Unknown"}</span>
+                      Scan Run :{" "}
+                      <span className="text-slate-200 font-medium">
+                        {scan.uploadedBy?.name || "Unknown"}
+                      </span>
                     </div>
 
                     <div className="flex items-center gap-1">
@@ -126,7 +144,10 @@ const FailedScans = () => {
                     </div>
 
                     <div>
-                      📅 {formatDate(scan.completedAt || scan.updatedAt || scan.startedAt)}
+                      📅{" "}
+                      {formatDate(
+                        scan.completedAt || scan.updatedAt || scan.startedAt,
+                      )}
                     </div>
 
                     <div className="text-indigo-400">
@@ -145,7 +166,8 @@ const FailedScans = () => {
                       Failure Details
                     </p>
                     <p className="text-xs sm:text-sm whitespace-pre-wrap break-words text-red-100/90">
-                      {scan.errorMessage || "The scan failed before detailed error information was recorded."}
+                      {scan.errorMessage ||
+                        "The scan failed before detailed error information was recorded."}
                     </p>
                   </div>
                 </div>

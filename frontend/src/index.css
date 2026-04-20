@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
 /* ============================================================
-   Light theme overrides — applied when <html> has class "light"
-   Higher specificity (html.light + class) beats Tailwind utilities.
+   LIGHT THEME — Applied when <html class="light">
+   Comprehensive color palette for optimal readability & consistency
    ============================================================ */
 
-/* Main page backgrounds */
+/* ─────── PAGE & CONTAINER BACKGROUNDS ─────── */
 html.light .bg-\[\#0f0f1a\] {
   background-color: #f1f5f9;
 }
@@ -15,26 +15,20 @@ html.light .bg-\[\#0b0b14\] {
 html.light .bg-\[\#11131d\] {
   background-color: #e2e8f0;
 }
-
-/* Card / panel backgrounds */
 html.light .bg-\[\#13131f\] {
   background-color: #ffffff;
 }
 html.light .bg-\[\#13131f\]\/80 {
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: rgba(255, 255, 255, 0.95);
+}
+html.light .bg-black\/40 {
+  background-color: rgba(0, 0, 0, 0.15);
+}
+html.light .bg-black\/50 {
+  background-color: rgba(0, 0, 0, 0.2);
 }
 
-/* Navbar */
-html.light nav.bg-\[\#13131f\]\/80 {
-  background-color: rgba(255, 255, 255, 0.9);
-}
-
-/* Sidebar */
-html.light .bg-\[\#0b0b14\] {
-  background-color: #f8fafc;
-}
-
-/* Border colours: white-alpha → black-alpha equivalents */
+/* ─────── BORDERS ─────── */
 html.light .border-white\/5 {
   border-color: rgba(0, 0, 0, 0.06);
 }
@@ -47,10 +41,31 @@ html.light .border-white\/10 {
 html.light .border-white\/20 {
   border-color: rgba(0, 0, 0, 0.14);
 }
+html.light .border-red-500\/15 {
+  border-color: rgba(220, 38, 38, 0.25);
+}
+html.light .border-red-500\/20 {
+  border-color: rgba(220, 38, 38, 0.3);
+}
+html.light .border-red-500\/30 {
+  border-color: rgba(220, 38, 38, 0.4);
+}
+html.light .border-indigo-500\/30 {
+  border-color: rgba(99, 102, 241, 0.5);
+}
+html.light .border-slate-700 {
+  border-color: #cbd5e1;
+}
 
-/* Text: white headings → dark slate on light backgrounds */
+/* ─────── PRIMARY TEXT ─────── */
 html.light .text-white {
   color: #1e293b;
+}
+html.light .text-slate-100 {
+  color: #1e293b;
+}
+html.light .text-slate-200 {
+  color: #334155;
 }
 html.light .text-slate-300 {
   color: #475569;
@@ -58,34 +73,343 @@ html.light .text-slate-300 {
 html.light .text-slate-400 {
   color: #64748b;
 }
-
-/* Keep white text inside coloured buttons / badges intact */
-html.light [class*="bg-indigo"] .text-white,
-html.light [class*="bg-red"] .text-white,
-html.light [class*="bg-green"] .text-white,
-html.light [class*="bg-yellow"] .text-white,
-html.light [class*="bg-purple"] .text-white,
-html.light .bg-indigo-600 {
-  color: #ffffff;
+html.light .text-slate-500 {
+  color: #94a3b8;
 }
-html.light .bg-indigo-600 .text-white {
-  color: #ffffff;
+html.light .text-slate-600 {
+  color: #cbd5e1;
 }
 
-/* Hover helpers used in sidebar / navbar */
-html.light .hover\:bg-white\/5:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+/* ─────── SEVERITY BADGES & COLORED TEXT ─────── */
+/* Critical - Red */
+html.light .bg-red-500\/20 {
+  background-color: #fecaca;
 }
-html.light .hover\:bg-white\/10:hover {
+html.light .text-red-400 {
+  color: #dc2626;
+}
+
+/* High - Orange */
+html.light .bg-orange-500\/20 {
+  background-color: rgba(249, 115, 22, 0.15);
+}
+html.light .text-orange-400 {
+  color: #ea580c;
+}
+html.light .border-orange-500\/30 {
+  border-color: rgba(249, 115, 22, 0.5);
+}
+
+/* Medium - Yellow */
+html.light .bg-yellow-500\/20 {
+  background-color: rgba(234, 179, 8, 0.15);
+}
+html.light .text-yellow-400 {
+  color: #ca8a04;
+}
+html.light .border-yellow-500\/30 {
+  border-color: rgba(234, 179, 8, 0.5);
+}
+
+/* Low - Blue */
+html.light .bg-blue-500\/20 {
+  background-color: rgba(59, 130, 246, 0.15);
+}
+html.light .text-blue-400 {
+  color: #2563eb;
+}
+html.light .border-blue-500\/30 {
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+/* Slate - Unknown */
+html.light .bg-slate-500\/20 {
+  background-color: rgba(100, 116, 139, 0.15);
+}
+html.light .text-slate-400 {
+  color: #64748b;
+}
+html.light .border-slate-500\/30 {
+  border-color: rgba(100, 116, 139, 0.4);
+}
+
+/* Green - Success */
+html.light .bg-green-500\/10 {
+  background-color: rgba(34, 197, 94, 0.12);
+}
+html.light .text-green-400 {
+  color: #16a34a;
+}
+html.light .border-green-500\/20 {
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+/* Emerald */
+html.light .bg-emerald-500\/10 {
+  background-color: rgba(16, 185, 129, 0.12);
+}
+html.light .text-emerald-400 {
+  color: #059669;
+}
+html.light .border-emerald-500\/20 {
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+/* Purple */
+html.light .bg-purple-600\/10 {
+  background-color: rgba(147, 51, 234, 0.1);
+}
+html.light .text-purple-400 {
+  color: #9333ea;
+}
+
+/* Indigo */
+html.light .bg-indigo-600\/20 {
+  background-color: rgba(79, 70, 229, 0.15);
+}
+html.light .bg-indigo-600\/15 {
+  background-color: rgba(79, 70, 229, 0.12);
+}
+html.light .text-indigo-300 {
+  color: #4f46e5;
+}
+html.light .text-indigo-400 {
+  color: #4f46e5;
+}
+html.light .border-indigo-500\/20 {
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+/* Amber */
+html.light .bg-amber-500\/15 {
+  background-color: rgba(217, 119, 6, 0.12);
+}
+html.light .text-amber-400 {
+  color: #d97706;
+}
+html.light .border-amber-500\/25 {
+  border-color: rgba(217, 119, 6, 0.5);
+}
+
+/* ─────── BACKGROUND HELPERS ─────── */
+html.light .bg-white\/5 {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+html.light .bg-white\/10 {
   background-color: rgba(0, 0, 0, 0.08);
 }
+html.light .bg-white\/20 {
+  background-color: rgba(0, 0, 0, 0.12);
+}
+html.light .bg-white\/3 {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+html.light .bg-white\/4 {
+  background-color: rgba(0, 0, 0, 0.03);
+}
 
-/* Scrollbar */
+/* ─────── HOVER STATES ─────── */
+html.light .hover\:bg-white\/5:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+html.light .hover\:bg-white\/10:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+html.light .hover\:bg-white\/20:hover {
+  background-color: rgba(0, 0, 0, 0.12);
+}
+html.light .hover\:text-white:hover {
+  color: #0f172a;
+}
+
+/* ─────── FOCUS STATES ─────── */
+html.light .focus\:ring-indigo-500\/50:focus {
+  --tw-ring-color: rgba(99, 102, 241, 0.5);
+}
+html.light .focus\:border-indigo-500:focus {
+  border-color: #6366f1;
+}
+
+/* ─────── SCROLLBAR ─────── */
 html.light ::-webkit-scrollbar-track {
   background: #e2e8f0;
 }
 html.light ::-webkit-scrollbar-thumb {
   background: #6366f1;
+}
+
+/* ─────── LOADERS & SPINNERS ─────── */
+html.light .border-indigo-500 {
+  border-color: #6366f1;
+}
+html.light .border-indigo-400 {
+  border-color: #818cf8;
+}
+html.light .border-t-transparent {
+  border-top-color: transparent;
+}
+
+/* ─────── ERROR & ALERT STATES ─────── */
+html.light .bg-red-500\/10 {
+  background-color: #fef2f2;
+}
+html.light .text-red-400 {
+  color: #dc2626;
+}
+html.light .text-red-300 {
+  color: #991b1b;
+}
+html.light .text-red-100 {
+  color: #7f1d1d;
+}
+html.light .text-red-100\/90 {
+  color: rgba(127, 29, 29, 0.92);
+}
+html.light .text-red-200 {
+  color: #7f1d1d;
+}
+
+/* ─────── BACKDROP & OVERLAY ─────── */
+html.light .backdrop-blur-xl {
+  backdrop-filter: blur(20px);
+}
+html.light .backdrop-blur-sm {
+  backdrop-filter: blur(4px);
+}
+
+/* ─────── LIGHT THEME CARD & VISUAL HIERARCHY ─────── */
+/* Refined card styling with subtle shadows and improved contrast */
+html.light .bg-\[\#13131f\] {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* Empty state card - clean and subtle */
+html.light .bg-\[\#13131f\].border-white\/10 {
+  background-color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+/* Refined scan item cards with failed status - subtle cream background */
+html.light .bg-\[\#13131f\].border-red-500\/15 {
+  background-color: #fafaf9;
+  border-color: rgba(220, 38, 38, 0.18);
+  box-shadow: 0 1px 2px rgba(220, 38, 38, 0.08);
+}
+
+/* Top-level error message container - more defined appearance */
+html.light .bg-red-500\/10.border-red-500\/30 {
+  background-color: #fee2e2;
+  border-color: rgba(220, 38, 38, 0.35);
+}
+
+/* Failure details box - subtle and readable */
+html.light .bg-red-500\/10.border-red-500\/20 {
+  background-color: #fef2f2;
+  border-color: rgba(220, 38, 38, 0.22);
+}
+
+/* Light theme badge refinements - Failed status badge */
+html.light .bg-red-500\/10.border-red-500\/20.rounded-full {
+  background-color: #fed7d7;
+  border-color: rgba(220, 38, 38, 0.28);
+}
+
+/* Refresh button - subtle and consistent */
+html.light .border-white\/10.bg-white\/5 {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+html.light .border-white\/10.bg-white\/5:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+/* Improved hover states for cards */
+html.light .hover\:bg-white\/5:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* ─────── KEEP COLORED ELEMENTS ON DARK BACKGROUNDS (e.g., buttons) ─────── */
+html.light .bg-indigo-600 {
+  background-color: #4f46e5;
+  color: #ffffff;
+}
+html.light .hover\:bg-indigo-600:hover {
+  background-color: #4f46e5;
+}
+html.light .hover\:bg-indigo-500:hover {
+  background-color: #6366f1;
+}
+html.light .hover\:bg-indigo-700:hover {
+  background-color: #4338ca;
+}
+html.light .bg-indigo-500 {
+  background-color: #6366f1;
+  color: #ffffff;
+}
+html.light .bg-indigo-600 .text-white {
+  color: #ffffff;
+}
+html.light .bg-indigo-600 .text-indigo-300 {
+  color: #ffffff;
+}
+
+/* Red buttons */
+html.light .bg-red-600 {
+  background-color: #dc2626;
+  color: #ffffff;
+}
+html.light .hover\:bg-red-600:hover {
+  background-color: #dc2626;
+}
+html.light .hover\:bg-red-700:hover {
+  background-color: #b91c1c;
+}
+
+/* Green elements */
+html.light .bg-green-400 {
+  background-color: #22c55e;
+}
+html.light .text-green-400 {
+  color: #16a34a;
+}
+
+/* ─────── SPECIAL COMPONENTS ─────── */
+/* Admin page tables */
+html.light .bg-\[#2b2bb2\] {
+  background-color: #6366f1;
+}
+html.light .text-\[#2b2bb2\] {
+  color: #4f46e5;
+}
+html.light .text-\[#1f1f8a\] {
+  color: #4338ca;
+}
+
+/* Input fields */
+html.light input[type="text"],
+html.light input[type="email"],
+html.light input[type="password"],
+html.light input[type="number"],
+html.light textarea,
+html.light select {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #cbd5e1;
+}
+
+html.light input:focus,
+html.light textarea:focus,
+html.light select:focus {
+  background-color: #ffffff;
+  border-color: #6366f1;
+  outline: none;
 }
 
 /* @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap'); */

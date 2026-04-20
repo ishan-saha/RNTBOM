@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { CheckCircle, Clock, FileText } from "lucide-react";
+import { useTheme } from "../context/ThemeContext";
 import API from "../api/auth";
 import { useNavigate } from "react-router-dom";
 import { Loader } from "../components/ui/Loader";
 
 const CompletedScans = () => {
+  const { isDark } = useTheme();
   const [scans, setScans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dataFetched, setDataFetched] = useState(false);
@@ -55,7 +57,9 @@ const CompletedScans = () => {
 
   return (
     // Responsive outer padding: mobile tight, scales to desktop generous layout.
-    <div className="p-4 sm:p-6 md:p-8 lg:p-10 bg-[#0f0f1a] min-h-screen text-white">
+    <div
+      className={`p-4 sm:p-6 md:p-8 lg:p-10 ${isDark ? "bg-[#0f0f1a]" : "bg-[#f1f5f9]"} min-h-screen text-white`}
+    >
       {/* Show responsive orbiting loader while fetching completed scans for the first time. */}
       {showLoader && <Loader />}
 

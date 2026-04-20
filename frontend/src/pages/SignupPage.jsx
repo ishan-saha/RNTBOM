@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 import { signupUser } from "../api/auth";
 import toast from "react-hot-toast";
 import Loader from "../components/ui/Loader";
@@ -88,16 +89,26 @@ const COUNTRIES = [
 ];
 
 // eslint-disable-next-line no-unused-vars
-const InputField = ({ id, label, icon: Icon, error, children, required }) => (
+const InputField = ({
+  id,
+  label,
+  icon: Icon,
+  error,
+  children,
+  required,
+  isDark,
+}) => (
   <div>
     <label
       htmlFor={id}
-      className="block text-sm font-medium text-slate-300 mb-1.5"
+      className={`block text-sm font-medium ${isDark ? "text-slate-300" : "text-slate-700"} mb-1.5`}
     >
       {label} {required && <span className="text-red-400">*</span>}
     </label>
     <div className="relative">
-      <Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 z-10" />
+      <Icon
+        className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? "text-slate-500" : "text-slate-400"} z-10`}
+      />
       {children}
     </div>
     {error && <p className="text-red-400 text-xs mt-1.5">{error}</p>}
@@ -132,6 +143,7 @@ const PUBLIC_EMAIL_DOMAINS = new Set([
 
 const SignupPage = () => {
   const { login } = useAuth();
+  const { isDark } = useTheme();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -218,13 +230,19 @@ const SignupPage = () => {
   };
 
   const inputClass = (field) =>
-    `w-full pl-10 pr-4 py-3 bg-white/5 border rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-sm ${
-      errors[field] ? "border-red-500/70" : "border-white/10"
+    `w-full pl-10 pr-4 py-3 ${isDark ? "bg-white/5 text-white placeholder-slate-500 border-white/10" : "bg-gray-50 text-gray-900 placeholder-gray-400 border-black/10"} border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-sm ${
+      errors[field]
+        ? "border-red-500/70"
+        : isDark
+          ? "border-white/10"
+          : "border-black/10"
     }`;
 
   return (
     // Reduced vertical padding on mobile (≤480px) to ensure short-viewport devices can scroll the form comfortably.
-    <div className="min-h-screen bg-[#0f0f1a] flex items-center justify-center p-3 sm:p-4 py-6 sm:py-12 relative overflow-hidden">
+    <div
+      className={`min-h-screen ${isDark ? "bg-[#0f0f1a]" : "bg-[#f1f5f9]"} flex items-center justify-center p-3 sm:p-4 py-6 sm:py-12 relative overflow-hidden`}
+    >
       {loading && <Loader />}
       {/* Background blobs */}
       <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-indigo-600/8 rounded-full blur-3xl pointer-events-none" />
@@ -234,16 +252,22 @@ const SignupPage = () => {
       <div className="w-full max-w-lg relative z-10">
         {/* Card */}
         {/* Use tighter inner padding on mobile so form fields aren't crowded against a narrow viewport. */}
-        <div className="bg-[#13131f]/80 backdrop-blur-xl border border-white/8 rounded-2xl p-4 sm:p-8 shadow-2xl">
+        <div
+          className={`${isDark ? "bg-[#13131f]/80 border-white/8" : "bg-white border-black/10"} backdrop-blur-xl border rounded-2xl p-4 sm:p-8 shadow-2xl`}
+        >
           {/* Header */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-14 h-14 bg-indigo-600/20 rounded-2xl mb-4">
               <Shield className="w-7 h-7 text-indigo-400" />
             </div>
-            <h1 className="text-2xl font-bold text-white mb-1">
+            <h1
+              className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"} mb-1`}
+            >
               Create your account
             </h1>
-            <p className="text-slate-400 text-sm">
+            <p
+              className={`${isDark ? "text-slate-400" : "text-slate-600"} text-sm`}
+            >
               Join us today — it's completely free
             </p>
           </div>
@@ -263,6 +287,7 @@ const SignupPage = () => {
                 icon={User}
                 error={errors.name}
                 required
+                isDark={isDark}
               >
                 <input
                   id="name"
@@ -282,6 +307,7 @@ const SignupPage = () => {
                 icon={Mail}
                 error={errors.email}
                 required
+                isDark={isDark}
               >
                 <input
                   id="email"
@@ -304,6 +330,7 @@ const SignupPage = () => {
                 icon={Lock}
                 error={errors.password}
                 required
+                isDark={isDark}
               >
                 <input
                   id="password"
@@ -334,6 +361,7 @@ const SignupPage = () => {
                 icon={Lock}
                 error={errors.confirmPassword}
                 required
+                isDark={isDark}
               >
                 <input
                   id="confirmPassword"
@@ -365,6 +393,7 @@ const SignupPage = () => {
               icon={Building2}
               error={errors.organization}
               required
+              isDark={isDark}
             >
               <input
                 id="organization"
@@ -383,27 +412,37 @@ const SignupPage = () => {
               <div>
                 <label
                   htmlFor="role"
-                  className="block text-sm font-medium text-slate-300 mb-1.5"
+                  className={`block text-sm font-medium ${isDark ? "text-slate-300" : "text-slate-700"} mb-1.5`}
                 >
                   Role <span className="text-red-400">*</span>
                 </label>
                 <div className="relative">
-                  <UserCog className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <UserCog
+                    className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? "text-slate-500" : "text-slate-400"}`}
+                  />
                   <select
                     id="role"
                     name="role"
                     value={formData.role}
                     onChange={handleChange}
-                    className="w-full pl-10 pr-10 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-sm appearance-none cursor-pointer"
+                    className={`w-full pl-10 pr-10 py-3 ${isDark ? "bg-white/5 border-white/10 text-white" : "bg-gray-50 border-black/10 text-gray-900"} border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-sm appearance-none cursor-pointer`}
                   >
-                    <option value="user" className="bg-[#1a1a2e]">
+                    <option
+                      value="user"
+                      className={`${isDark ? "bg-[#1a1a2e]" : "bg-white"}`}
+                    >
                       User
                     </option>
-                    <option value="admin" className="bg-[#1a1a2e]">
+                    <option
+                      value="admin"
+                      className={`${isDark ? "bg-[#1a1a2e]" : "bg-white"}`}
+                    >
                       Admin
                     </option>
                   </select>
-                  <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                  <ChevronDown
+                    className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? "text-slate-500" : "text-slate-400"} pointer-events-none`}
+                  />
                 </div>
               </div>
 
@@ -411,25 +450,33 @@ const SignupPage = () => {
               <div>
                 <label
                   htmlFor="country"
-                  className="block text-sm font-medium text-slate-300 mb-1.5"
+                  className={`block text-sm font-medium ${isDark ? "text-slate-300" : "text-slate-700"} mb-1.5`}
                 >
                   Country <span className="text-red-400">*</span>
                 </label>
                 <div className="relative">
-                  <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <Globe
+                    className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? "text-slate-500" : "text-slate-400"}`}
+                  />
                   <select
                     id="country"
                     name="country"
                     value={formData.country}
                     onChange={handleChange}
-                    className={`w-full pl-10 pr-10 py-3 bg-white/5 border rounded-xl text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all ${
-                      formData.country ? "text-white" : "text-slate-500"
-                    } ${errors.country ? "border-red-500/70" : "border-white/10"}`}
+                    className={`w-full pl-10 pr-10 py-3 ${isDark ? "bg-white/5 border-white/10" : "bg-gray-50 border-black/10"} border rounded-xl text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all ${
+                      formData.country
+                        ? isDark
+                          ? "text-white"
+                          : "text-gray-900"
+                        : isDark
+                          ? "text-slate-500"
+                          : "text-slate-400"
+                    } ${errors.country ? "border-red-500/70" : isDark ? "border-white/10" : "border-black/10"}`}
                   >
                     <option
                       value=""
                       disabled
-                      className="bg-[#1a1a2e] text-slate-400"
+                      className={`${isDark ? "bg-[#1a1a2e] text-slate-400" : "bg-white text-slate-400"}`}
                     >
                       Select country
                     </option>
@@ -437,13 +484,15 @@ const SignupPage = () => {
                       <option
                         key={c}
                         value={c}
-                        className="bg-[#1a1a2e] text-white"
+                        className={`${isDark ? "bg-[#1a1a2e] text-white" : "bg-white text-gray-900"}`}
                       >
                         {c}
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                  <ChevronDown
+                    className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? "text-slate-500" : "text-slate-400"} pointer-events-none`}
+                  />
                 </div>
                 {errors.country && (
                   <p className="text-red-400 text-xs mt-1.5">
@@ -491,11 +540,13 @@ const SignupPage = () => {
           </form>
 
           {/* Footer */}
-          <p className="text-center text-slate-400 text-sm mt-6">
+          <p
+            className={`text-center ${isDark ? "text-slate-400" : "text-slate-600"} text-sm mt-6`}
+          >
             Already have an account?{" "}
             <Link
               to="/login"
-              className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+              className={`${isDark ? "text-indigo-400 hover:text-indigo-300" : "text-indigo-600 hover:text-indigo-700"} font-medium transition-colors`}
             >
               Sign in
             </Link>

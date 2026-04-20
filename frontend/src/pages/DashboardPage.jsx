@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTheme } from "../context/ThemeContext";
 import {
   Shield,
   Layers,
@@ -93,6 +94,7 @@ const SEVERITY_ROWS = [
 ];
 
 const DashboardPage = () => {
+  const { isDark } = useTheme();
   const [cves, setCves] = useState([]);
   const [totalResults, setTotalResults] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -158,7 +160,9 @@ const DashboardPage = () => {
   ];
 
   return (
-    <div className="p-4 sm:p-6 md:p-8 lg:p-10 bg-[#0f0f1a] min-h-screen text-white">
+    <div
+      className={`p-4 sm:p-6 md:p-8 lg:p-10 ${isDark ? "bg-[#0f0f1a]" : "bg-[#f1f5f9]"} min-h-screen text-white`}
+    >
       {/* ── Header ── */}
       <div className="mb-4 sm:mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>

@@ -1,8 +1,10 @@
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 import { User, Mail, Building2, Globe, Calendar, Shield } from "lucide-react";
 
 const ProfilePage = () => {
   const { user } = useAuth();
+  const { isDark } = useTheme();
 
   const formatDate = (date) => {
     if (!date) return "N/A";
@@ -11,8 +13,9 @@ const ProfilePage = () => {
 
   return (
     // Responsive padding: compact on mobile (≤480px), scales up to generous on large desktop.
-    <div className="p-4 sm:p-6 md:p-8 lg:p-10 bg-[#0f0f1a] min-h-screen text-white">
-
+    <div
+      className={`p-4 sm:p-6 md:p-8 lg:p-10 ${isDark ? "bg-[#0f0f1a]" : "bg-[#f1f5f9]"} min-h-screen text-white`}
+    >
       {/* Header */}
       <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
         <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xl font-bold shadow-lg">
@@ -21,17 +24,16 @@ const ProfilePage = () => {
 
         <div>
           {/* Reduce heading on mobile so full name fits within viewport width at ≤480px. */}
-          <h1 className="text-xl sm:text-2xl font-bold truncate">{user?.name}</h1>
-          <p className="text-slate-400 text-sm capitalize">
-            {user?.role}
-          </p>
+          <h1 className="text-xl sm:text-2xl font-bold truncate">
+            {user?.name}
+          </h1>
+          <p className="text-slate-400 text-sm capitalize">{user?.role}</p>
         </div>
       </div>
 
       {/* Profile Grid */}
       {/* 1-col on mobile/tablet, 2-col from md (769px) to avoid narrow unreadable panels. */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-
         {/* Personal Info */}
         <div className="bg-[#13131f] border border-white/10 rounded-xl p-4 sm:p-6">
           <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center gap-2">
@@ -40,7 +42,6 @@ const ProfilePage = () => {
           </h2>
 
           <div className="space-y-3 text-sm">
-
             <div className="flex justify-between">
               <span className="text-slate-400">Full Name</span>
               <span>{user?.name}</span>
@@ -56,7 +57,6 @@ const ProfilePage = () => {
               <span className="text-slate-400">Role</span>
               <span className="capitalize">{user?.role}</span>
             </div>
-
           </div>
         </div>
 
@@ -68,7 +68,6 @@ const ProfilePage = () => {
           </h2>
 
           <div className="space-y-3 text-sm">
-
             <div className="flex justify-between">
               <span className="text-slate-400">Organization</span>
               <span>{user?.organization?.name || "N/A"}</span>
@@ -78,7 +77,6 @@ const ProfilePage = () => {
               <span className="text-slate-400">Country</span>
               <span>{user?.country}</span>
             </div>
-
           </div>
         </div>
 
@@ -92,7 +90,6 @@ const ProfilePage = () => {
 
           {/* 1-col on mobile, 3-col on medium/desktop so account date fields don't wrap awkwardly at 769px. */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-sm">
-
             <div className="flex flex-col">
               <span className="text-slate-400">Created At</span>
               <span>{formatDate(user?.createdAt)}</span>
@@ -105,11 +102,12 @@ const ProfilePage = () => {
 
             <div className="flex flex-col">
               <span className="text-slate-400">Status</span>
-              <span className={user?.isActive ? "text-green-400" : "text-red-400"}>
+              <span
+                className={user?.isActive ? "text-green-400" : "text-red-400"}
+              >
                 {user?.isActive ? "Active" : "Inactive"}
               </span>
             </div>
-
           </div>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "../context/ThemeContext";
 import { Clock, AlertCircle, CheckCircle, Activity } from "lucide-react";
 import API from "../api/auth";
 import Loader from "../components/ui/Loader";
@@ -41,6 +42,7 @@ const getElapsedProgress = (startedAt) => {
 };
 
 const ActiveScans = () => {
+  const { isDark } = useTheme();
   const [scans, setScans] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -128,7 +130,9 @@ const ActiveScans = () => {
 
   return (
     // Responsive outer padding: compact on mobile (≤480px), scales up for tablet and desktop.
-    <div className="p-4 sm:p-6 md:p-8 lg:p-10 bg-[#0f0f1a] min-h-screen text-white">
+    <div
+      className={`p-4 sm:p-6 md:p-8 lg:p-10 ${isDark ? "bg-[#0f0f1a]" : "bg-[#f1f5f9]"} min-h-screen text-white`}
+    >
       {/* Smaller heading on mobile prevents text from pushing outside the viewport at ≤480px. */}
       <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2">
         <Clock className="w-5 h-5 text-yellow-400" />
@@ -138,7 +142,9 @@ const ActiveScans = () => {
       {loading ? (
         <Loader />
       ) : scans.length === 0 ? (
-        <div className="bg-[#13131f] border border-white/10 rounded-xl p-6 sm:p-8 text-center">
+        <div
+          className={`${isDark ? "bg-[#13131f] border-white/10" : "bg-white border-black/10"} border rounded-xl p-6 sm:p-8 text-center`}
+        >
           <div className="mx-auto mb-4 flex items-center justify-center w-12 h-12 rounded-full bg-indigo-500/10 border border-indigo-500/20">
             <Activity className="w-5 h-5 text-indigo-400" />
           </div>

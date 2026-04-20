@@ -31,7 +31,13 @@ const Navbar = ({ onOpenMobileSidebar }) => {
               </div>
               {/* Slightly downscale the brand text on very small screens to prevent crowding. */}
               <div className="flex items-center">
-                <div className="p-1.5 bg-gradient-to-br from-indigo-600/10 to-purple-600/10 rounded-md">
+                <div
+                  className={`p-1.5 rounded-md ${
+                    isDark
+                      ? "bg-gradient-to-br from-indigo-600/10 to-purple-600/10"
+                      : "bg-indigo-600"
+                  }`}
+                >
                   <img
                     src="/rntWhiteLogo.png"
                     alt="RNT"

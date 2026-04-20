@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 import { loginUser } from "../api/auth";
 import toast from "react-hot-toast";
 import Loader from "../components/ui/Loader";
@@ -42,6 +43,7 @@ const PUBLIC_EMAIL_DOMAINS = new Set([
 
 const LoginPage = () => {
   const { login } = useAuth();
+  const { isDark } = useTheme();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -104,7 +106,9 @@ const LoginPage = () => {
   };
   return (
     // Add vertical padding so the card never touches browser chrome on short mobile viewports.
-    <div className="min-h-screen bg-[#0f0f1a] flex items-center justify-center p-4 py-8 sm:py-12 relative overflow-hidden">
+    <div
+      className={`min-h-screen ${isDark ? "bg-[#0f0f1a]" : "bg-[#f1f5f9]"} flex items-center justify-center p-4 py-8 sm:py-12 relative overflow-hidden`}
+    >
       {loading && <Loader />}
       {/* Background blobs */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
@@ -114,14 +118,22 @@ const LoginPage = () => {
       <div className="w-full max-w-md relative z-10">
         {/* Card */}
         {/* Compact inner padding on mobile so form fields aren't pushed against a narrow screen. */}
-        <div className="bg-[#13131f]/80 backdrop-blur-xl border border-white/8 rounded-2xl p-5 sm:p-8 shadow-2xl">
+        <div
+          className={`${isDark ? "bg-[#13131f]/80 border-white/8" : "bg-white border-black/10"} backdrop-blur-xl border rounded-2xl p-5 sm:p-8 shadow-2xl`}
+        >
           {/* Header */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-14 h-14 bg-indigo-600/20 rounded-2xl mb-4">
               <Shield className="w-7 h-7 text-indigo-400" />
             </div>
-            <h1 className="text-2xl font-bold text-white mb-1">Welcome back</h1>
-            <p className="text-slate-400 text-sm">
+            <h1
+              className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"} mb-1`}
+            >
+              Welcome back
+            </h1>
+            <p
+              className={`${isDark ? "text-slate-400" : "text-slate-600"} text-sm`}
+            >
               Sign in to your account to continue
             </p>
           </div>
@@ -131,12 +143,14 @@ const LoginPage = () => {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-slate-300 mb-1.5"
+                className={`block text-sm font-medium ${isDark ? "text-slate-300" : "text-slate-700"} mb-1.5`}
               >
                 Email address
               </label>
               <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <Mail
+                  className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? "text-slate-500" : "text-slate-400"}`}
+                />
                 <input
                   id="email"
                   type="email"
@@ -144,8 +158,12 @@ const LoginPage = () => {
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="you@example.com"
-                  className={`w-full pl-10 pr-4 py-3 bg-white/5 border rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-sm ${
-                    errors.email ? "border-red-500/70" : "border-white/10"
+                  className={`w-full pl-10 pr-4 py-3 ${isDark ? "bg-white/5 border-white/10 text-white placeholder-slate-500" : "bg-gray-50 border-black/10 text-gray-900 placeholder-gray-400"} border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-sm ${
+                    errors.email
+                      ? "border-red-500/70"
+                      : isDark
+                        ? "border-white/10"
+                        : "border-black/10"
                   }`}
                 />
               </div>
@@ -158,12 +176,14 @@ const LoginPage = () => {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-slate-300 mb-1.5"
+                className={`block text-sm font-medium ${isDark ? "text-slate-300" : "text-slate-700"} mb-1.5`}
               >
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <Lock
+                  className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? "text-slate-500" : "text-slate-400"}`}
+                />
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
@@ -171,14 +191,18 @@ const LoginPage = () => {
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="••••••••"
-                  className={`w-full pl-10 pr-11 py-3 bg-white/5 border rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-sm ${
-                    errors.password ? "border-red-500/70" : "border-white/10"
+                  className={`w-full pl-10 pr-11 py-3 ${isDark ? "bg-white/5 border-white/10 text-white placeholder-slate-500" : "bg-gray-50 border-black/10 text-gray-900 placeholder-gray-400"} border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-sm ${
+                    errors.password
+                      ? "border-red-500/70"
+                      : isDark
+                        ? "border-white/10"
+                        : "border-black/10"
                   }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                  className={`absolute right-3.5 top-1/2 -translate-y-1/2 ${isDark ? "text-slate-500 hover:text-slate-300" : "text-slate-400 hover:text-slate-600"} transition-colors`}
                 >
                   {showPassword ? (
                     <EyeOff className="w-4 h-4" />
@@ -213,11 +237,13 @@ const LoginPage = () => {
           </form>
 
           {/* Footer */}
-          <p className="text-center text-slate-400 text-sm mt-6">
+          <p
+            className={`text-center ${isDark ? "text-slate-400" : "text-slate-600"} text-sm mt-6`}
+          >
             Don't have an account?{" "}
             <Link
               to="/signup"
-              className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+              className={`${isDark ? "text-indigo-400 hover:text-indigo-300" : "text-indigo-600 hover:text-indigo-700"} font-medium transition-colors`}
             >
               Create account
             </Link>
