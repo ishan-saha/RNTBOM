@@ -74,11 +74,11 @@ const Sidebar = ({ mobileOpen, onCloseMobile }) => {
             className={`inline-flex items-center p-1.5 rounded-md ${desktopExpanded ? "md:inline" : "md:hidden"} inline ${
               isDark
                 ? "bg-gradient-to-br from-indigo-600/10 to-purple-600/10"
-                : "bg-indigo-600"
+                : "bg-white"
             }`}
           >
             <img
-              src="/rntWhiteLogo.png"
+              src={isDark ? "/rntWhiteLogo.png" : "/RNTlogo.jpg"}
               alt="RNT"
               className="h-7 w-auto block"
             />

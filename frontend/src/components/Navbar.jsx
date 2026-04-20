@@ -26,20 +26,20 @@ const Navbar = ({ onOpenMobileSidebar }) => {
               </button>
             )}
             <Link to="/" className="flex items-center gap-2.5 group">
-              <div className="p-2 bg-indigo-600/20 rounded-xl group-hover:bg-indigo-600/30 transition-colors">
+              {/* <div className="p-2 bg-indigo-600/20 rounded-xl group-hover:bg-indigo-600/30 transition-colors">
                 <Shield className="w-5 h-5 text-indigo-400" />
-              </div>
+              </div> */}
               {/* Slightly downscale the brand text on very small screens to prevent crowding. */}
               <div className="flex items-center">
                 <div
                   className={`p-1.5 rounded-md ${
                     isDark
                       ? "bg-gradient-to-br from-indigo-600/10 to-purple-600/10"
-                      : "bg-indigo-600"
+                      : "bg-white"
                   }`}
                 >
                   <img
-                    src="/rntWhiteLogo.png"
+                    src={isDark ? "/rntWhiteLogo.png" : "/RNTlogo.jpg"}
                     alt="RNT"
                     className="h-6 sm:h-7 w-auto block"
                   />
