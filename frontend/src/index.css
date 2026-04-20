@@ -1,5 +1,92 @@
 @import "tailwindcss";
 
+/* ============================================================
+   Light theme overrides — applied when <html> has class "light"
+   Higher specificity (html.light + class) beats Tailwind utilities.
+   ============================================================ */
+
+/* Main page backgrounds */
+html.light .bg-\[\#0f0f1a\] {
+  background-color: #f1f5f9;
+}
+html.light .bg-\[\#0b0b14\] {
+  background-color: #f8fafc;
+}
+html.light .bg-\[\#11131d\] {
+  background-color: #e2e8f0;
+}
+
+/* Card / panel backgrounds */
+html.light .bg-\[\#13131f\] {
+  background-color: #ffffff;
+}
+html.light .bg-\[\#13131f\]\/80 {
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+/* Navbar */
+html.light nav.bg-\[\#13131f\]\/80 {
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+/* Sidebar */
+html.light .bg-\[\#0b0b14\] {
+  background-color: #f8fafc;
+}
+
+/* Border colours: white-alpha → black-alpha equivalents */
+html.light .border-white\/5 {
+  border-color: rgba(0, 0, 0, 0.06);
+}
+html.light .border-white\/8 {
+  border-color: rgba(0, 0, 0, 0.08);
+}
+html.light .border-white\/10 {
+  border-color: rgba(0, 0, 0, 0.1);
+}
+html.light .border-white\/20 {
+  border-color: rgba(0, 0, 0, 0.14);
+}
+
+/* Text: white headings → dark slate on light backgrounds */
+html.light .text-white {
+  color: #1e293b;
+}
+html.light .text-slate-300 {
+  color: #475569;
+}
+html.light .text-slate-400 {
+  color: #64748b;
+}
+
+/* Keep white text inside coloured buttons / badges intact */
+html.light [class*="bg-indigo"] .text-white,
+html.light [class*="bg-red"] .text-white,
+html.light [class*="bg-green"] .text-white,
+html.light [class*="bg-yellow"] .text-white,
+html.light [class*="bg-purple"] .text-white,
+html.light .bg-indigo-600 {
+  color: #ffffff;
+}
+html.light .bg-indigo-600 .text-white {
+  color: #ffffff;
+}
+
+/* Hover helpers used in sidebar / navbar */
+html.light .hover\:bg-white\/5:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+html.light .hover\:bg-white\/10:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+/* Scrollbar */
+html.light ::-webkit-scrollbar-track {
+  background: #e2e8f0;
+}
+html.light ::-webkit-scrollbar-thumb {
+  background: #6366f1;
+}
 
 /* @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap'); */
 
