@@ -1,6 +1,9 @@
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { useTheme } from "../context/ThemeContext";
 import { Shield, Layers, AlertTriangle, Activity, Plus } from "lucide-react";
+import axios from "axios";
+import Loader from "../components/ui/Loader";
 
 const StatCard = ({ icon, label, value, color }) => {
   const Icon = icon;
@@ -18,37 +21,69 @@ const StatCard = ({ icon, label, value, color }) => {
 
 const AdminDashboard = () => {
   const { isDark } = useTheme();
-  const stats = [
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get("/api/admin/stats", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (res.data.success) {
+          setData(res.data.data);
+        }
+      } catch (err) {
+        setError(
+          err.response?.data?.message || "Failed to fetch dashboard stats",
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  if (loading) return <Loader />;
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-red-400">{error}</p>
+      </div>
+    );
+  }
+
+  const { stats, cveFeed } = data || {};
+
+  const statCards = [
     {
       label: "Libraries (LIB)",
-      value: 128,
+      value: stats?.totalComponents || 0,
       icon: Layers,
       color: "text-indigo-400",
     },
     {
       label: "Licenses (TL)",
-      value: 45,
+      value: stats?.totalScans || 0, // Assuming 1 scan = 1 primary license context or similar
       icon: Shield,
       color: "text-purple-400",
     },
     {
       label: "Vulnerabilities (VL)",
-      value: 23,
+      value: stats?.totalVulnerabilities || 0,
       icon: AlertTriangle,
       color: "text-red-400",
     },
     {
       label: "Active Scans",
-      value: 5,
+      value: stats?.runningScans || 0,
       icon: Activity,
       color: "text-yellow-400",
     },
-  ];
-
-  const cveFeed = [
-    { cve: "CVE-2024-1234", severity: "High" },
-    { cve: "CVE-2024-5678", severity: "Medium" },
-    { cve: "CVE-2024-9999", severity: "Critical" },
   ];
 
   return (
@@ -74,7 +109,7 @@ const AdminDashboard = () => {
       {/* Stats */}
       {/* 1-col on mobile, 2-col on tablet, 4-col on large desktop to prevent card overflow. */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-        {stats.map((s, i) => (
+        {statCards.map((s, i) => (
           <StatCard key={i} {...s} />
         ))}
       </div>
@@ -86,7 +121,7 @@ const AdminDashboard = () => {
         </h2>
 
         <div className="space-y-3">
-          {cveFeed.map((item, i) => (
+          {cveFeed?.map((item, i) => (
             <div
               key={i}
               className="flex justify-between items-center bg-white/5 p-3 rounded-lg gap-2"
@@ -104,17 +139,17 @@ const AdminDashboard = () => {
 
         <div className="flex justify-between">
           <span className="text-yellow-400">Running</span>
-          <span>3</span>
+          <span>{stats?.runningScans || 0}</span>
         </div>
 
         <div className="flex justify-between mt-2">
           <span className="text-green-400">Finished</span>
-          <span>8</span>
+          <span>{stats?.completedScans || 0}</span>
         </div>
 
         <div className="flex justify-between mt-2">
           <span className="text-red-400">Failed</span>
-          <span>2</span>
+          <span>{stats?.failedScans || 0}</span>
         </div>
       </div>
     </div>

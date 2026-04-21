@@ -1,59 +1,78 @@
-'use strict';
+"use strict";
 
-const crypto = require('crypto');
-const path = require('path');
-const nodemailer = require('nodemailer');
+const crypto = require("crypto");
+const path = require("path");
+const nodemailer = require("nodemailer");
 
-const EmailConfig = require('../models/EmailConfig');
-const SeoSetting = require('../models/SeoSetting');
+const EmailConfig = require("../models/EmailConfig");
+const SeoSetting = require("../models/SeoSetting");
+const Scan = require("../models/Scan");
 
-const DEFAULT_EMAIL_PROVIDER = process.env.SMTP_PROVIDER || 'mailtrap';
-const DEFAULT_EMAIL_HOST = process.env.SMTP_HOST || 'sandbox.smtp.mailtrap.io';
+const DEFAULT_EMAIL_PROVIDER = process.env.SMTP_PROVIDER || "mailtrap";
+const DEFAULT_EMAIL_HOST = process.env.SMTP_HOST || "sandbox.smtp.mailtrap.io";
 const DEFAULT_EMAIL_PORT = Number(process.env.SMTP_PORT || 2525);
-const DEFAULT_EMAIL_SECURE = String(process.env.SMTP_SECURE || 'false').toLowerCase() === 'true';
-const DEFAULT_EMAIL_USERNAME = process.env.SMTP_EMAIL_USERNAME || '';
-const DEFAULT_EMAIL_PASSWORD = process.env.SMTP_EMAIL_PASSWORD || '';
-const DEFAULT_EMAIL_FROM_NAME = process.env.SMTP_FROM_NAME || 'SBOM Full Security Team';
-const DEFAULT_EMAIL_FROM_EMAIL = process.env.SMTP_FROM_EMAIL || 'noreply@sbom-full.local';
+const DEFAULT_EMAIL_SECURE =
+  String(process.env.SMTP_SECURE || "false").toLowerCase() === "true";
+const DEFAULT_EMAIL_USERNAME = process.env.SMTP_EMAIL_USERNAME || "";
+const DEFAULT_EMAIL_PASSWORD = process.env.SMTP_EMAIL_PASSWORD || "";
+const DEFAULT_EMAIL_FROM_NAME =
+  process.env.SMTP_FROM_NAME || "SBOM Full Security Team";
+const DEFAULT_EMAIL_FROM_EMAIL =
+  process.env.SMTP_FROM_EMAIL || "noreply@sbom-full.local";
 
 const AES_KEY = crypto
-  .createHash('sha256')
-  .update(process.env.JWT_SECRET || 'sbom-admin-settings-secret')
+  .createHash("sha256")
+  .update(process.env.JWT_SECRET || "sbom-admin-settings-secret")
   .digest();
 
 const encryptSecret = (value) => {
-  if (!value) return '';
+  if (!value) return "";
 
   const iv = crypto.randomBytes(12);
-  const cipher = crypto.createCipheriv('aes-256-gcm', AES_KEY, iv);
-  const encrypted = Buffer.concat([cipher.update(String(value), 'utf8'), cipher.final()]);
+  const cipher = crypto.createCipheriv("aes-256-gcm", AES_KEY, iv);
+  const encrypted = Buffer.concat([
+    cipher.update(String(value), "utf8"),
+    cipher.final(),
+  ]);
   const authTag = cipher.getAuthTag();
 
-  return [iv.toString('hex'), authTag.toString('hex'), encrypted.toString('hex')].join(':');
+  return [
+    iv.toString("hex"),
+    authTag.toString("hex"),
+    encrypted.toString("hex"),
+  ].join(":");
 };
 
 const decryptSecret = (value) => {
-  if (!value) return '';
+  if (!value) return "";
 
-  const parts = String(value).split(':');
+  const parts = String(value).split(":");
   if (parts.length !== 3) return value;
 
   const [ivHex, authTagHex, encryptedHex] = parts;
-  const decipher = crypto.createDecipheriv('aes-256-gcm', AES_KEY, Buffer.from(ivHex, 'hex'));
-  decipher.setAuthTag(Buffer.from(authTagHex, 'hex'));
+  const decipher = crypto.createDecipheriv(
+    "aes-256-gcm",
+    AES_KEY,
+    Buffer.from(ivHex, "hex"),
+  );
+  decipher.setAuthTag(Buffer.from(authTagHex, "hex"));
 
   const decrypted = Buffer.concat([
-    decipher.update(Buffer.from(encryptedHex, 'hex')),
+    decipher.update(Buffer.from(encryptedHex, "hex")),
     decipher.final(),
   ]);
 
-  return decrypted.toString('utf8');
+  return decrypted.toString("utf8");
 };
 
 const normalizeKeywords = (keywords) => {
-  if (Array.isArray(keywords)) return keywords.map((item) => String(item).trim()).filter(Boolean);
-  if (typeof keywords === 'string') {
-    return keywords.split(',').map((item) => item.trim()).filter(Boolean);
+  if (Array.isArray(keywords))
+    return keywords.map((item) => String(item).trim()).filter(Boolean);
+  if (typeof keywords === "string") {
+    return keywords
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
   }
   return [];
 };
@@ -61,18 +80,20 @@ const normalizeKeywords = (keywords) => {
 const sanitizeEmailConfig = (configDoc) => configDoc.toJSON();
 
 const escapeHtml = (value) =>
-  String(value || '')
+  String(value || "")
     .trim()
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-    .replace(/\n/g, '<br />');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+    .replace(/\n/g, "<br />");
 
 const buildBrandedEmailTemplate = ({ username, body }) => {
-  const safeUsername = escapeHtml(username || 'there');
-  const safeBody = escapeHtml(body || 'This is a test email from the SEO & SMTP admin settings page.');
+  const safeUsername = escapeHtml(username || "there");
+  const safeBody = escapeHtml(
+    body || "This is a test email from the SEO & SMTP admin settings page.",
+  );
 
   return `
     <div style="font-family:Arial,Helvetica,sans-serif;background:#0f0f1a;padding:24px;color:#e5e7eb;">
@@ -99,9 +120,9 @@ const buildBrandedEmailTemplate = ({ username, body }) => {
 };
 
 const getBrandedLogoAttachment = () => ({
-  filename: 'RNT_report_LOGO.png',
-  path: path.join(__dirname, '..', 'images', 'RNT_report_LOGO.png'),
-  cid: 'rnt-logo',
+  filename: "RNT_report_LOGO.png",
+  path: path.join(__dirname, "..", "images", "RNT_report_LOGO.png"),
+  cid: "rnt-logo",
 });
 
 const getSeedEmailConfig = () => ({
@@ -127,7 +148,7 @@ const ensureDefaultEmailConfig = async () => {
     provider: DEFAULT_EMAIL_PROVIDER,
     host: DEFAULT_EMAIL_HOST,
     username: DEFAULT_EMAIL_USERNAME,
-  }).select('+password');
+  }).select("+password");
 
   if (existing) {
     return existing;
@@ -156,15 +177,27 @@ const buildEmailTransport = (configDoc) => {
 };
 
 const buildTransportFromPayload = (payload = {}) => {
-  const provider = String(payload.provider || DEFAULT_EMAIL_PROVIDER).trim().toLowerCase();
-  const host = String(payload.host || (provider === 'gmail' ? 'smtp.gmail.com' : DEFAULT_EMAIL_HOST)).trim();
-  const port = Number(payload.port || (provider === 'gmail' ? 587 : DEFAULT_EMAIL_PORT));
-  const secure = payload.secure !== undefined ? Boolean(payload.secure) : provider === 'gmail';
-  const username = String(payload.username || '').trim();
-  const password = String(payload.password || '').trim();
+  const provider = String(payload.provider || DEFAULT_EMAIL_PROVIDER)
+    .trim()
+    .toLowerCase();
+  const host = String(
+    payload.host ||
+      (provider === "gmail" ? "smtp.gmail.com" : DEFAULT_EMAIL_HOST),
+  ).trim();
+  const port = Number(
+    payload.port || (provider === "gmail" ? 587 : DEFAULT_EMAIL_PORT),
+  );
+  const secure =
+    payload.secure !== undefined
+      ? Boolean(payload.secure)
+      : provider === "gmail";
+  const username = String(payload.username || "").trim();
+  const password = String(payload.password || "").trim();
 
   if (!username || !password) {
-    const error = new Error('Username and password are required to send email.');
+    const error = new Error(
+      "Username and password are required to send email.",
+    );
     error.statusCode = 400;
     throw error;
   }
@@ -176,15 +209,17 @@ const buildTransportFromPayload = (payload = {}) => {
       secure,
       auth: { user: username, pass: password },
     }),
-    fromName: String(payload.fromName || '').trim(),
-    fromEmail: String(payload.fromEmail || '').trim(),
+    fromName: String(payload.fromName || "").trim(),
+    fromEmail: String(payload.fromEmail || "").trim(),
     provider,
   };
 };
 
 const listEmailConfigs = async (req, res) => {
   try {
-    const configs = await EmailConfig.find().select('+password').sort({ createdAt: -1 });
+    const configs = await EmailConfig.find()
+      .select("+password")
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
@@ -193,21 +228,29 @@ const listEmailConfigs = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to load email configs.' });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to load email configs." });
   }
 };
 
 const getEmailConfigById = async (req, res) => {
   try {
-    const config = await EmailConfig.findById(req.params.id).select('+password');
+    const config = await EmailConfig.findById(req.params.id).select(
+      "+password",
+    );
 
     if (!config) {
-      return res.status(404).json({ success: false, message: 'Email config not found.' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Email config not found." });
     }
 
     res.status(200).json({ success: true, data: sanitizeEmailConfig(config) });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to load email config.' });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to load email config." });
   }
 };
 
@@ -225,8 +268,18 @@ const createEmailConfig = async (req, res) => {
       isActive,
     } = req.body;
 
-    if (!provider || !host || !port || !username || !password || !fromName || !fromEmail) {
-      return res.status(400).json({ success: false, message: 'All SMTP fields are required.' });
+    if (
+      !provider ||
+      !host ||
+      !port ||
+      !username ||
+      !password ||
+      !fromName ||
+      !fromEmail
+    ) {
+      return res
+        .status(400)
+        .json({ success: false, message: "All SMTP fields are required." });
     }
 
     const created = await EmailConfig.create({
@@ -242,23 +295,32 @@ const createEmailConfig = async (req, res) => {
     });
 
     if (created.isActive) {
-      await EmailConfig.updateMany({ _id: { $ne: created._id } }, { $set: { isActive: false } });
+      await EmailConfig.updateMany(
+        { _id: { $ne: created._id } },
+        { $set: { isActive: false } },
+      );
     }
 
-    const saved = await EmailConfig.findById(created._id).select('+password');
+    const saved = await EmailConfig.findById(created._id).select("+password");
 
     res.status(201).json({ success: true, data: sanitizeEmailConfig(saved) });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to create email config.' });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to create email config." });
   }
 };
 
 const updateEmailConfig = async (req, res) => {
   try {
-    const config = await EmailConfig.findById(req.params.id).select('+password');
+    const config = await EmailConfig.findById(req.params.id).select(
+      "+password",
+    );
 
     if (!config) {
-      return res.status(404).json({ success: false, message: 'Email config not found.' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Email config not found." });
     }
 
     const {
@@ -280,20 +342,26 @@ const updateEmailConfig = async (req, res) => {
     if (username !== undefined) config.username = String(username).trim();
     if (fromName !== undefined) config.fromName = String(fromName).trim();
     if (fromEmail !== undefined) config.fromEmail = String(fromEmail).trim();
-    if (password && String(password).trim()) config.password = encryptSecret(password);
+    if (password && String(password).trim())
+      config.password = encryptSecret(password);
     if (isActive !== undefined) config.isActive = Boolean(isActive);
 
     await config.save();
 
     if (config.isActive) {
-      await EmailConfig.updateMany({ _id: { $ne: config._id } }, { $set: { isActive: false } });
+      await EmailConfig.updateMany(
+        { _id: { $ne: config._id } },
+        { $set: { isActive: false } },
+      );
     }
 
-    const saved = await EmailConfig.findById(config._id).select('+password');
+    const saved = await EmailConfig.findById(config._id).select("+password");
 
     res.status(200).json({ success: true, data: sanitizeEmailConfig(saved) });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to update email config.' });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to update email config." });
   }
 };
 
@@ -302,49 +370,70 @@ const deleteEmailConfig = async (req, res) => {
     const deleted = await EmailConfig.findByIdAndDelete(req.params.id);
 
     if (!deleted) {
-      return res.status(404).json({ success: false, message: 'Email config not found.' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Email config not found." });
     }
 
-    res.status(200).json({ success: true, message: 'Email config deleted successfully.' });
+    res
+      .status(200)
+      .json({ success: true, message: "Email config deleted successfully." });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to delete email config.' });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to delete email config." });
   }
 };
 
 const activateEmailConfig = async (req, res) => {
   try {
-    const config = await EmailConfig.findById(req.params.id).select('+password');
+    const config = await EmailConfig.findById(req.params.id).select(
+      "+password",
+    );
 
     if (!config) {
-      return res.status(404).json({ success: false, message: 'Email config not found.' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Email config not found." });
     }
 
     config.isActive = true;
     await config.save();
-    await EmailConfig.updateMany({ _id: { $ne: config._id } }, { $set: { isActive: false } });
+    await EmailConfig.updateMany(
+      { _id: { $ne: config._id } },
+      { $set: { isActive: false } },
+    );
 
-    const saved = await EmailConfig.findById(config._id).select('+password');
+    const saved = await EmailConfig.findById(config._id).select("+password");
     res.status(200).json({ success: true, data: sanitizeEmailConfig(saved) });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to activate email config.' });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to activate email config." });
   }
 };
 
 const deactivateEmailConfig = async (req, res) => {
   try {
-    const config = await EmailConfig.findById(req.params.id).select('+password');
+    const config = await EmailConfig.findById(req.params.id).select(
+      "+password",
+    );
 
     if (!config) {
-      return res.status(404).json({ success: false, message: 'Email config not found.' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Email config not found." });
     }
 
     config.isActive = false;
     await config.save();
 
-    const saved = await EmailConfig.findById(config._id).select('+password');
+    const saved = await EmailConfig.findById(config._id).select("+password");
     res.status(200).json({ success: true, data: sanitizeEmailConfig(saved) });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to deactivate email config.' });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to deactivate email config." });
   }
 };
 
@@ -353,46 +442,76 @@ const testEmailConfig = async (req, res) => {
     const { recipient, subject, body } = req.body;
 
     if (!recipient || !String(recipient).trim()) {
-      return res.status(400).json({ success: false, message: 'Recipient email is required.' });
+      return res
+        .status(400)
+        .json({ success: false, message: "Recipient email is required." });
     }
 
-    const config = await EmailConfig.findById(req.params.id).select('+password');
+    const config = await EmailConfig.findById(req.params.id).select(
+      "+password",
+    );
 
     if (!config) {
-      return res.status(404).json({ success: false, message: 'Email config not found.' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Email config not found." });
     }
 
     const transporter = buildEmailTransport(config);
     await transporter.sendMail({
       from: `"${config.fromName || DEFAULT_EMAIL_FROM_NAME}" <${config.fromEmail || config.username || DEFAULT_EMAIL_FROM_EMAIL}>`,
       to: String(recipient).trim(),
-      subject: String(subject || 'SMTP Test Email').trim(),
+      subject: String(subject || "SMTP Test Email").trim(),
       text:
-        String(body || '').trim() ||
-        'This is a test email from the SEO & SMTP admin settings page.',
-      html: `<p>${String(body || 'This is a test email from the SEO & SMTP admin settings page.')
+        String(body || "").trim() ||
+        "This is a test email from the SEO & SMTP admin settings page.",
+      html: `<p>${String(
+        body || "This is a test email from the SEO & SMTP admin settings page.",
+      )
         .trim()
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/\n/g, '<br />')}</p>`,
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\n/g, "<br />")}</p>`,
     });
 
-    res.status(200).json({ success: true, message: 'Test email sent successfully.' });
+    res
+      .status(200)
+      .json({ success: true, message: "Test email sent successfully." });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to send test email.' });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to send test email." });
   }
 };
 
 const sendInlineEmail = async (req, res) => {
   try {
-    const { recipient, subject, body, provider, host, port, secure, username, password, fromName, fromEmail } = req.body;
+    const {
+      recipient,
+      subject,
+      body,
+      provider,
+      host,
+      port,
+      secure,
+      username,
+      password,
+      fromName,
+      fromEmail,
+    } = req.body;
 
     if (!recipient || !String(recipient).trim()) {
-      return res.status(400).json({ success: false, message: 'Recipient email is required.' });
+      return res
+        .status(400)
+        .json({ success: false, message: "Recipient email is required." });
     }
 
-    const { transporter, fromName: safeFromName, fromEmail: safeFromEmail } = buildTransportFromPayload({
+    const {
+      transporter,
+      fromName: safeFromName,
+      fromEmail: safeFromEmail,
+    } = buildTransportFromPayload({
       provider,
       host,
       port,
@@ -406,26 +525,32 @@ const sendInlineEmail = async (req, res) => {
     const resolvedFromEmail = safeFromEmail || username;
 
     if (!resolvedFromEmail) {
-      return res.status(400).json({ success: false, message: 'From email is required.' });
+      return res
+        .status(400)
+        .json({ success: false, message: "From email is required." });
     }
 
     await transporter.sendMail({
       from: `"${safeFromName || DEFAULT_EMAIL_FROM_NAME}" <${resolvedFromEmail}>`,
       to: String(recipient).trim(),
-      subject: String(subject || 'SMTP Test Email').trim(),
-      text: `Hey ${String(username || 'there').trim()}, your test is completed.\n\n${String(body || '').trim() || 'This is a test email from the SEO & SMTP admin settings page.'}\n\nThanks,\nRNT Infosec LLP`,
+      subject: String(subject || "SMTP Test Email").trim(),
+      text: `Hey ${String(username || "there").trim()}, your test is completed.\n\n${String(body || "").trim() || "This is a test email from the SEO & SMTP admin settings page."}\n\nThanks,\nRNT Infosec LLP`,
       html: buildBrandedEmailTemplate({
         username,
-        body: String(body || '').trim() || 'This is a test email from the SEO & SMTP admin settings page.',
+        body:
+          String(body || "").trim() ||
+          "This is a test email from the SEO & SMTP admin settings page.",
       }),
       attachments: [getBrandedLogoAttachment()],
     });
 
-    res.status(200).json({ success: true, message: 'Test email sent successfully.' });
+    res
+      .status(200)
+      .json({ success: true, message: "Test email sent successfully." });
   } catch (error) {
     res.status(error.statusCode || 500).json({
       success: false,
-      message: error.message || 'Failed to send test email.',
+      message: error.message || "Failed to send test email.",
     });
   }
 };
@@ -435,7 +560,9 @@ const listSeoSettings = async (req, res) => {
     const settings = await SeoSetting.find().sort({ updatedAt: -1 });
     res.status(200).json({ success: true, data: settings });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to load SEO settings.' });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to load SEO settings." });
   }
 };
 
@@ -444,37 +571,42 @@ const getSeoSettingById = async (req, res) => {
     const setting = await SeoSetting.findById(req.params.id);
 
     if (!setting) {
-      return res.status(404).json({ success: false, message: 'SEO setting not found.' });
+      return res
+        .status(404)
+        .json({ success: false, message: "SEO setting not found." });
     }
 
     res.status(200).json({ success: true, data: setting });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to load SEO setting.' });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to load SEO setting." });
   }
 };
 
 const saveSeoSetting = async (req, res, existingSetting = null) => {
-  const route = String(req.body.route || '/').trim() || '/';
+  const route = String(req.body.route || "/").trim() || "/";
   const payload = {
     route,
-    pageName: String(req.body.pageName || 'Global Settings').trim(),
-    metaTitle: String(req.body.metaTitle || '').trim(),
-    metaDescription: String(req.body.metaDescription || '').trim(),
-    canonicalUrl: String(req.body.canonicalUrl || '').trim(),
+    pageName: String(req.body.pageName || "Global Settings").trim(),
+    metaTitle: String(req.body.metaTitle || "").trim(),
+    metaDescription: String(req.body.metaDescription || "").trim(),
+    canonicalUrl: String(req.body.canonicalUrl || "").trim(),
     keywords: normalizeKeywords(req.body.keywords),
     openGraph: {
-      title: String(req.body.openGraph?.title || '').trim(),
-      description: String(req.body.openGraph?.description || '').trim(),
-      image: String(req.body.openGraph?.image || '').trim(),
-      type: String(req.body.openGraph?.type || 'website').trim(),
+      title: String(req.body.openGraph?.title || "").trim(),
+      description: String(req.body.openGraph?.description || "").trim(),
+      image: String(req.body.openGraph?.image || "").trim(),
+      type: String(req.body.openGraph?.type || "website").trim(),
     },
     twitter: {
-      title: String(req.body.twitter?.title || '').trim(),
-      description: String(req.body.twitter?.description || '').trim(),
-      image: String(req.body.twitter?.image || '').trim(),
-      card: String(req.body.twitter?.card || 'summary_large_image').trim(),
+      title: String(req.body.twitter?.title || "").trim(),
+      description: String(req.body.twitter?.description || "").trim(),
+      image: String(req.body.twitter?.image || "").trim(),
+      card: String(req.body.twitter?.card || "summary_large_image").trim(),
     },
-    isActive: req.body.isActive !== undefined ? Boolean(req.body.isActive) : true,
+    isActive:
+      req.body.isActive !== undefined ? Boolean(req.body.isActive) : true,
   };
 
   if (existingSetting) {
@@ -496,13 +628,20 @@ const saveSeoSetting = async (req, res, existingSetting = null) => {
 const createSeoSetting = async (req, res) => {
   try {
     if (!req.body.metaTitle || !req.body.metaDescription) {
-      return res.status(400).json({ success: false, message: 'SEO title and description are required.' });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "SEO title and description are required.",
+        });
     }
 
     const setting = await saveSeoSetting(req);
     res.status(201).json({ success: true, data: setting });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to create SEO setting.' });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to create SEO setting." });
   }
 };
 
@@ -511,21 +650,95 @@ const updateSeoSetting = async (req, res) => {
     const setting = await SeoSetting.findById(req.params.id);
 
     if (!setting) {
-      return res.status(404).json({ success: false, message: 'SEO setting not found.' });
+      return res
+        .status(404)
+        .json({ success: false, message: "SEO setting not found." });
     }
 
-    if (req.body.metaTitle === undefined && req.body.metaDescription === undefined && req.body.openGraph === undefined && req.body.twitter === undefined && req.body.keywords === undefined && req.body.route === undefined && req.body.pageName === undefined && req.body.isActive === undefined) {
-      return res.status(400).json({ success: false, message: 'No SEO fields provided.' });
+    if (
+      req.body.metaTitle === undefined &&
+      req.body.metaDescription === undefined &&
+      req.body.openGraph === undefined &&
+      req.body.twitter === undefined &&
+      req.body.keywords === undefined &&
+      req.body.route === undefined &&
+      req.body.pageName === undefined &&
+      req.body.isActive === undefined
+    ) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No SEO fields provided." });
     }
 
     const updated = await saveSeoSetting(req, setting);
     res.status(200).json({ success: true, data: updated });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to update SEO setting.' });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to update SEO setting." });
+  }
+};
+
+const getAdminStats = async (req, res) => {
+  try {
+    const stats = await Scan.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalScans: { $sum: 1 },
+          totalComponents: { $sum: "$componentCount" },
+          totalVulnerabilities: { $sum: "$vulnTotal" },
+          criticalVulnerabilities: { $sum: "$vulnCritical" },
+          highVulnerabilities: { $sum: "$vulnHigh" },
+          runningScans: {
+            $sum: { $cond: [{ $eq: ["$status", "running"] }, 1, 0] },
+          },
+          completedScans: {
+            $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] },
+          },
+          failedScans: {
+            $sum: { $cond: [{ $eq: ["$status", "failed"] }, 1, 0] },
+          },
+        },
+      },
+    ]);
+
+    const defaultStats = {
+      totalScans: 0,
+      totalComponents: 0,
+      totalVulnerabilities: 0,
+      criticalVulnerabilities: 0,
+      highVulnerabilities: 0,
+      runningScans: 0,
+      completedScans: 0,
+      failedScans: 0,
+    };
+
+    const finalStats = stats.length > 0 ? stats[0] : defaultStats;
+
+    // placeholder for CVE feed, would usually pull from a cache or feed service
+    const cveFeed = [
+      { cve: "CVE-2024-1234", severity: "High" },
+      { cve: "CVE-2024-5678", severity: "Medium" },
+      { cve: "CVE-2024-9999", severity: "Critical" },
+    ];
+
+    res.status(200).json({
+      success: true,
+      data: {
+        stats: finalStats,
+        cveFeed,
+      },
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch admin statistics." });
   }
 };
 
 module.exports = {
+  getAdminStats,
   listEmailConfigs,
   getEmailConfigById,
   createEmailConfig,
