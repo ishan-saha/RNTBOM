@@ -494,12 +494,12 @@ export default function AdminSettingsPage() {
       <div className="relative z-10 max-w-7xl mx-auto pb-8">
         <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4 mb-8">
           <div className="space-y-2">
-            
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white leading-tight flex items-center gap-3">
               SEO & SMTP Settings
             </h1>
             <p className="max-w-2xl text-slate-400 text-sm sm:text-base">
-              Admin-only controls for email transport and global metadata used across the SBOM Full security platform.
+              Admin-only controls for email transport and global metadata used
+              across the SBOM Full security platform.
             </p>
           </div>
           {successMessage && (
@@ -524,20 +524,28 @@ export default function AdminSettingsPage() {
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
               <div className={panelClass}>
                 <div className="relative p-6 sm:p-8">
-                  <form ref={smtpFormRef} onSubmit={handleSubmitEmailConfig} className="flex flex-col gap-6" autoComplete="off">
+                  <form
+                    ref={smtpFormRef}
+                    onSubmit={handleSubmitEmailConfig}
+                    className="flex flex-col gap-6"
+                    autoComplete="off"
+                  >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-indigo-600/15 rounded-2xl flex items-center justify-center text-indigo-300 border border-indigo-500/20 shadow-[0_0_40px_rgba(99,102,241,0.18)]">
                           <Mail size={24} />
                         </div>
                         <div>
-                          <h2 className="text-xl font-black text-white">SMTP </h2>
+                          <h2 className="text-xl font-black text-white">
+                            SMTP{" "}
+                          </h2>
                           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mt-1">
-                            {selectedEmailConfigId ? 'Create new Mail' : 'Create new Mail'}
+                            {selectedEmailConfigId
+                              ? "Create new Mail"
+                              : "Create new Mail"}
                           </p>
                         </div>
                       </div>
-                     
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -548,13 +556,28 @@ export default function AdminSettingsPage() {
                             value={emailConfig.provider}
                             onChange={handleEmailConfigChange}
                             className={`${fieldInputClass} appearance-none pr-11 bg-[#11131d] border-slate-700 text-slate-100 focus:border-sky-400 focus:ring-2 focus:ring-sky-400/15`}
-                            style={{ backgroundColor: '#11131d', color: '#e2e8f0' }}
+                            style={{
+                              backgroundColor: "#11131d",
+                              color: "#e2e8f0",
+                            }}
                             autoComplete="off"
                           >
-                            <option value="mailtrap" style={{ backgroundColor: '#11131d', color: '#e2e8f0' }}>
+                            <option
+                              value="mailtrap"
+                              style={{
+                                backgroundColor: "#11131d",
+                                color: "#e2e8f0",
+                              }}
+                            >
                               Mailtrap
                             </option>
-                            <option value="gmail" style={{ backgroundColor: '#11131d', color: '#e2e8f0' }}>
+                            <option
+                              value="gmail"
+                              style={{
+                                backgroundColor: "#11131d",
+                                color: "#e2e8f0",
+                              }}
+                            >
                               Gmail
                             </option>
                           </select>
@@ -562,17 +585,38 @@ export default function AdminSettingsPage() {
                         </div>
                       </Field>
                       <Field label="Port" error={errors.port}>
-                        <input type="number" name="port" value={emailConfig.port} onChange={handleEmailConfigChange} className={fieldInputClass} autoComplete="off" />
+                        <input
+                          type="number"
+                          name="port"
+                          value={emailConfig.port}
+                          onChange={handleEmailConfigChange}
+                          className={fieldInputClass}
+                          autoComplete="off"
+                        />
                       </Field>
                     </div>
 
                     <Field label="SMTP Host" error={errors.host}>
-                      <input type="text" name="host" value={emailConfig.host} onChange={handleEmailConfigChange} className={fieldInputClass} autoComplete="off" />
+                      <input
+                        type="text"
+                        name="host"
+                        value={emailConfig.host}
+                        onChange={handleEmailConfigChange}
+                        className={fieldInputClass}
+                        autoComplete="off"
+                      />
                     </Field>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <Field label="Username" error={errors.username}>
-                        <input type="text" name="username" value={emailConfig.username} onChange={handleEmailConfigChange} className={fieldInputClass} autoComplete="new-password" />
+                        <input
+                          type="text"
+                          name="username"
+                          value={emailConfig.username}
+                          onChange={handleEmailConfigChange}
+                          className={fieldInputClass}
+                          autoComplete="new-password"
+                        />
                       </Field>
                       <Field label="Password / Key" error={errors.password}>
                         <input
@@ -580,7 +624,11 @@ export default function AdminSettingsPage() {
                           name="password"
                           value={emailConfig.password}
                           onChange={handleEmailConfigChange}
-                          placeholder={selectedEmailConfigId ? 'Leave blank to keep current password' : ''}
+                          placeholder={
+                            selectedEmailConfigId
+                              ? "Leave blank to keep current password"
+                              : ""
+                          }
                           className={fieldInputClass}
                           autoComplete="new-password"
                         />
@@ -589,10 +637,24 @@ export default function AdminSettingsPage() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <Field label="From Name" error={errors.fromName}>
-                        <input type="text" name="fromName" value={emailConfig.fromName} onChange={handleEmailConfigChange} className={fieldInputClass} autoComplete="off" />
+                        <input
+                          type="text"
+                          name="fromName"
+                          value={emailConfig.fromName}
+                          onChange={handleEmailConfigChange}
+                          className={fieldInputClass}
+                          autoComplete="off"
+                        />
                       </Field>
                       <Field label="From Email" error={errors.fromEmail}>
-                        <input type="email" name="fromEmail" value={emailConfig.fromEmail} onChange={handleEmailConfigChange} className={fieldInputClass} autoComplete="off" />
+                        <input
+                          type="email"
+                          name="fromEmail"
+                          value={emailConfig.fromEmail}
+                          onChange={handleEmailConfigChange}
+                          className={fieldInputClass}
+                          autoComplete="off"
+                        />
                       </Field>
                     </div>
 
@@ -603,7 +665,7 @@ export default function AdminSettingsPage() {
                         value={testRecipient}
                         onChange={(e) => {
                           setTestRecipient(e.target.value);
-                          clearFieldError('recipient');
+                          clearFieldError("recipient");
                         }}
                         placeholder="RECIPIENT EMAIL"
                         className={fieldInputClass}
@@ -627,9 +689,9 @@ export default function AdminSettingsPage() {
                       type="button"
                       onClick={handleTestEmailConfig}
                       disabled={sectionLoading.test}
-                      className="mt-1 h-14 w-full rounded-2xl bg-sky-400 hover:bg-sky-300 text-slate-950 font-black uppercase tracking-[0.18em] text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_30px_rgba(56,189,248,0.22)]"
+                      className="cursor-pointer mt-1 h-14 w-full rounded-2xl bg-sky-400 hover:bg-sky-300 text-slate-950 font-black uppercase tracking-[0.18em] text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_30px_rgba(56,189,248,0.22)]"
                     >
-                      {sectionLoading.test ? 'Sending...' : 'Send Mail'}
+                      {sectionLoading.test ? "Sending..." : "Send Mail"}
                     </button>
                   </form>
                 </div>
@@ -637,15 +699,22 @@ export default function AdminSettingsPage() {
 
               <div className={panelClass}>
                 <div className="relative p-6 sm:p-8">
-                  <form onSubmit={handleSubmitSeo} className="h-full flex flex-col gap-6">
+                  <form
+                    onSubmit={handleSubmitSeo}
+                    className="h-full flex flex-col gap-6"
+                  >
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-emerald-500/15 rounded-2xl flex items-center justify-center text-emerald-300 border border-emerald-500/20">
                           <Globe size={24} />
                         </div>
                         <div>
-                          <h2 className="text-xl font-black text-white">Global SEO Tags</h2>
-                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mt-1">Project metadata</p>
+                          <h2 className="text-xl font-black text-white">
+                            Global SEO Tags
+                          </h2>
+                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mt-1">
+                            Project metadata
+                          </p>
                         </div>
                       </div>
                       <button
@@ -653,15 +722,33 @@ export default function AdminSettingsPage() {
                         disabled={sectionLoading.seo}
                         className={`${sectionButtonBase} bg-emerald-600 hover:bg-emerald-500 text-white`}
                       >
-                        {sectionLoading.seo ? <Loader2 className="w-5 h-5 animate-spin" /> : <ArrowRight size={20} />}
+                        {sectionLoading.seo ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <ArrowRight size={20} />
+                        )}
                       </button>
                     </div>
 
-                    <Field label="Site Title" helper={`${seoTags.siteTitle.length}/60`} error={errors.siteTitle}>
-                      <input type="text" name="siteTitle" value={seoTags.siteTitle} onChange={handleSeoChange} className={fieldInputClass} />
+                    <Field
+                      label="Site Title"
+                      helper={`${seoTags.siteTitle.length}/60`}
+                      error={errors.siteTitle}
+                    >
+                      <input
+                        type="text"
+                        name="siteTitle"
+                        value={seoTags.siteTitle}
+                        onChange={handleSeoChange}
+                        className={fieldInputClass}
+                      />
                     </Field>
 
-                    <Field label="Meta Description" helper={`${seoTags.metaDescription.length}/160`} error={errors.metaDescription}>
+                    <Field
+                      label="Meta Description"
+                      helper={`${seoTags.metaDescription.length}/160`}
+                      error={errors.metaDescription}
+                    >
                       <textarea
                         name="metaDescription"
                         value={seoTags.metaDescription}
@@ -672,22 +759,38 @@ export default function AdminSettingsPage() {
                     </Field>
 
                     <Field label="Global Keywords">
-                      <input type="text" name="keywords" value={seoTags.keywords} onChange={handleSeoChange} className={fieldInputClass} />
+                      <input
+                        type="text"
+                        name="keywords"
+                        value={seoTags.keywords}
+                        onChange={handleSeoChange}
+                        className={fieldInputClass}
+                      />
                     </Field>
 
                     <Field label="Canonical URL">
-                      <input type="text" name="canonicalUrl" value={seoTags.canonicalUrl} readOnly className={`${fieldInputClass} opacity-75`} />
+                      <input
+                        type="text"
+                        name="canonicalUrl"
+                        value={seoTags.canonicalUrl}
+                        readOnly
+                        className={`${fieldInputClass} opacity-75`}
+                      />
                     </Field>
 
                     <Field label="Open Graph Image">
-                      <input type="text" name="ogImage" value={seoTags.ogImage} onChange={handleSeoChange} className={fieldInputClass} />
+                      <input
+                        type="text"
+                        name="ogImage"
+                        value={seoTags.ogImage}
+                        onChange={handleSeoChange}
+                        className={fieldInputClass}
+                      />
                     </Field>
                   </form>
                 </div>
               </div>
             </div>
-
-            
           </>
         )}
       </div>

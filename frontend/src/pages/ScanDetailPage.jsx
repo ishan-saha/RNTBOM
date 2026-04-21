@@ -192,7 +192,7 @@ const ScanDetailPage = () => {
         <button
           onClick={handleDownloadPDF}
           disabled={pdfLoading}
-          className="ml-auto flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm font-semibold shadow transition"
+          className="ml-auto flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm font-semibold shadow transition cursor-pointer"
         >
           {pdfLoading ? (
             <>

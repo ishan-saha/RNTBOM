@@ -56,7 +56,7 @@ const Sidebar = ({ mobileOpen, onCloseMobile }) => {
       <button
         type="button"
         onClick={onCloseMobile}
-        className={`fixed inset-0 z-40 bg-black/50 transition-opacity md:hidden ${
+        className={`fixed inset-0 z-40 bg-black/50 transition-opacity md:hidden cursor-pointer ${
           mobileOpen ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
         aria-label="Close sidebar overlay"
@@ -71,24 +71,49 @@ const Sidebar = ({ mobileOpen, onCloseMobile }) => {
         {/* Use separate close/collapse actions for mobile vs desktop to keep controls intuitive by screen size. */}
         <div className="flex items-center justify-between p-4">
           <div
-            className={`inline-flex items-center p-1.5 rounded-md ${desktopExpanded ? "md:inline" : "md:hidden"} inline ${
-              isDark
-                ? "bg-gradient-to-br from-indigo-600/10 to-purple-600/10"
-                : "bg-white"
-            }`}
+            className={`flex items-center gap-3 min-w-0 ${!desktopExpanded ? "md:hidden" : "md:flex"}`}
           >
-            <img
-              src={isDark ? "/rntWhiteLogo.png" : "/RNTlogo.jpg"}
-              alt="RNT"
-              className="h-7 w-auto block"
-            />
+            {/* Logo Container — matches Navbar styling */}
+            <div
+              className={`p-2 rounded-xl shrink-0 transition-all duration-300 ${
+                isDark
+                  ? "bg-white shadow-lg shadow-black/30"
+                  : "bg-white shadow-sm ring-1 ring-slate-200"
+              }`}
+            >
+              <img
+                src="/SSletterLOGO.png"
+                alt="Shieldersoft"
+                className="h-8 w-auto object-contain block"
+              />
+            </div>
+
+            {/* Text — hidden when desktop sidebar is collapsed */}
+            <div className="flex flex-col leading-tight min-w-0">
+              <span
+                className={`text-base font-semibold tracking-tight truncate ${
+                  isDark ? "text-white" : "text-slate-800"
+                }`}
+              >
+                Shieldersoft
+              </span>
+              <span
+                className={`text-xs font-medium tracking-wide ${
+                  isDark ? "text-slate-400" : "text-slate-500"
+                }`}
+              >
+                Technologies
+              </span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div
+            className={`flex items-center gap-2 ${!desktopExpanded ? "md:w-full md:justify-center" : ""}`}
+          >
             <button
               type="button"
               onClick={() => setDesktopExpanded((prev) => !prev)}
-              className="hidden md:inline-flex p-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/10"
+              className="hidden md:inline-flex p-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 cursor-pointer"
               aria-label="Toggle desktop sidebar"
             >
               <Menu className="w-5 h-5" />
@@ -96,7 +121,7 @@ const Sidebar = ({ mobileOpen, onCloseMobile }) => {
             <button
               type="button"
               onClick={onCloseMobile}
-              className="inline-flex md:hidden p-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/10"
+              className="inline-flex md:hidden p-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 cursor-pointer"
               aria-label="Close sidebar"
             >
               <X className="w-5 h-5" />
@@ -148,7 +173,7 @@ const Sidebar = ({ mobileOpen, onCloseMobile }) => {
                 <p className="text-xs text-slate-500 px-3 mt-4">ADMIN</p>
               )}
               {navItem("/admin", Shield, "Admin Panel")}
-              {navItem("/admin/settings", Settings, "SEO & SMTP")}
+              {navItem("/admin/settings", Settings, "SMTP & SEO")}
             </>
           )}
 
@@ -160,7 +185,7 @@ const Sidebar = ({ mobileOpen, onCloseMobile }) => {
         <div className="p-3 border-t border-white/10">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-2 w-full text-sm text-red-400 hover:bg-red-500/10 rounded-lg"
+            className="flex items-center gap-3 px-4 py-2 w-full text-sm text-red-400 hover:bg-red-500/10 rounded-lg cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
             <span

@@ -86,7 +86,7 @@ const FailedScans = () => {
             type="button"
             onClick={fetchScans}
             disabled={loading}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-200 text-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-200 text-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             Refresh
@@ -177,7 +177,7 @@ const FailedScans = () => {
                   <button
                     type="button"
                     onClick={() => navigate(`/scans/${scan._id}`)}
-                    className="flex items-center justify-center gap-2 px-4 py-2 text-sm bg-red-600 hover:bg-red-700 rounded-lg whitespace-nowrap"
+                    className="flex items-center justify-center gap-2 px-4 py-2 text-sm bg-red-600 hover:bg-red-700 rounded-lg whitespace-nowrap cursor-pointer"
                   >
                     <FileWarning className="w-4 h-4" />
                     View Failure

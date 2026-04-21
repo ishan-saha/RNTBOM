@@ -19,30 +19,82 @@ const Navbar = ({ onOpenMobileSidebar }) => {
               <button
                 type="button"
                 onClick={onOpenMobileSidebar}
-                className="inline-flex md:hidden items-center justify-center p-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+                className="inline-flex md:hidden items-center justify-center p-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                 aria-label="Open sidebar"
               >
                 <Menu className="w-5 h-5" />
               </button>
             )}
-            <Link to="/" className="flex items-center gap-2.5 group">
-              {/* <div className="p-2 bg-indigo-600/20 rounded-xl group-hover:bg-indigo-600/30 transition-colors">
-                <Shield className="w-5 h-5 text-indigo-400" />
-              </div> */}
-              {/* Slightly downscale the brand text on very small screens to prevent crowding. */}
-              <div className="flex items-center">
+            {/* <Link to="/" className="flex items-center gap-2.5 group">
+              <div className="flex items-center gap-2.5">
                 <div
-                  className={`p-1.5 rounded-md ${
+                  className={`p-1.5 rounded-lg ${
                     isDark
-                      ? "bg-gradient-to-br from-indigo-600/10 to-purple-600/10"
-                      : "bg-white"
+                      ? "bg-white/20 ring-1 ring-white/30 shadow-md shadow-indigo-900/30"
+                      : "bg-white shadow-sm ring-1 ring-slate-200"
                   }`}
                 >
                   <img
-                    src={isDark ? "/rntWhiteLogo.png" : "/RNTlogo.jpg"}
-                    alt="RNT"
-                    className="h-6 sm:h-7 w-auto block"
+                    src="/SSletterLOGO.png"
+                    alt="Shieldersoft"
+                    className="h-10 sm:h-11 w-auto block"
                   />
+                </div>
+                <div className="flex flex-col leading-tight">
+                  <span
+                    className={`text-sm sm:text-base font-bold tracking-tight ${
+                      isDark
+                        ? "bg-gradient-to-r from-indigo-300 via-purple-300 to-indigo-200 bg-clip-text text-transparent"
+                        : "text-slate-800"
+                    }`}
+                  >
+                    Shieldersoft
+                  </span>
+                  <span
+                    className={`text-[10px] sm:text-xs font-medium tracking-wide ${
+                      isDark ? "text-slate-400" : "text-slate-500"
+                    }`}
+                  >
+                    Technologies
+                  </span>
+                </div>
+              </div>
+            </Link> */}
+
+            <Link to="/" className="flex items-center gap-3 group">
+              <div className="flex items-center gap-3">
+                {/* Logo Container */}
+                <div
+                  className={`p-2 rounded-xl transition-all duration-300 ${
+                    isDark
+                      ? "bg-white shadow-lg shadow-black/30"
+                      : "bg-white shadow-sm ring-1 ring-slate-200"
+                  }`}
+                >
+                  <img
+                    src="/SSletterLOGO.png"
+                    alt="Shieldersoft"
+                    className="h-10 sm:h-10 w-auto object-contain"
+                  />
+                </div>
+
+                {/* Text */}
+                <div className="flex flex-col leading-tight">
+                  <span
+                    className={`text-base sm:text-lg font-semibold tracking-tight ${
+                      isDark ? "text-white" : "text-slate-800"
+                    }`}
+                  >
+                    Shieldersoft
+                  </span>
+
+                  <span
+                    className={`text-xs font-medium tracking-wide ${
+                      isDark ? "text-slate-400" : "text-slate-500"
+                    }`}
+                  >
+                    Technologies
+                  </span>
                 </div>
               </div>
             </Link>
@@ -106,7 +158,7 @@ const Navbar = ({ onOpenMobileSidebar }) => {
             <button
               type="button"
               onClick={toggleTheme}
-              className="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+              className="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
               aria-label={
                 isDark ? "Switch to light theme" : "Switch to dark theme"
               }

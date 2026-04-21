@@ -266,7 +266,7 @@ const NewScan = () => {
         <button
           type="submit"
           disabled={loading}
-          className={`w-full py-2.5 rounded-lg font-medium transition-all ${
+          className={`w-full py-2.5 rounded-lg font-medium transition-all cursor-pointer ${
             loading
               ? "bg-indigo-400 cursor-not-allowed"
               : "bg-indigo-600 hover:bg-indigo-700"

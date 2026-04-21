@@ -115,11 +115,11 @@ const ProfilePage = () => {
       {/* Actions (Optional Future) */}
       {/* Wrap action buttons on mobile so they don't overflow the viewport at ≤480px if both labels are wide. */}
       <div className="mt-4 sm:mt-6 flex flex-wrap gap-3">
-        <button className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-sm whitespace-nowrap">
+        <button className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-sm whitespace-nowrap cursor-pointer">
           Edit Profile
         </button>
 
-        <button className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm whitespace-nowrap">
+        <button className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm whitespace-nowrap cursor-pointer">
           Change Password
         </button>
       </div>

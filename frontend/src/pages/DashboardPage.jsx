@@ -179,10 +179,10 @@ const DashboardPage = () => {
           <button
             onClick={fetchCVEs}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-slate-300 text-sm font-medium transition-all hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-slate-300 text-sm font-medium transition-all hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             <RefreshCw
-              className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`}
+              className={`w-3.5 h-3.5  ${loading ? "animate-spin" : ""}`}
             />
             Refresh
           </button>
@@ -274,7 +274,9 @@ const DashboardPage = () => {
                     <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
                       {description}
                     </p>
-                    <p className="text-xs text-slate-600 mt-1.5">
+                    <p
+                      className={`text-xs mt-1.5 ${isDark ? "text-slate-500" : "text-slate-400"}`}
+                    >
                       Published: {new Date(cve.published).toLocaleDateString()}{" "}
                       &middot; Status: {cve.vulnStatus}
                     </p>
