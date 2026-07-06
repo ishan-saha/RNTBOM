@@ -9,6 +9,7 @@ const authRoutes = require('./src/routes/authRoutes');
 const userRoutes = require('./src/routes/userRoutes');
 const scanRoutes = require('./src/routes/scanRoutes'); // ✅ NEW
 const adminSettingsRoutes = require('./src/routes/adminSettingsRoutes');
+const firewallAssessmentRoutes = require('./src/routes/firewallAssessmentRoutes');
 
 const app = express();
 
@@ -56,6 +57,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/scans', scanRoutes); // ✅ NEW
 app.use('/api/admin', adminSettingsRoutes);
+app.use('/api/firewall-assessment', firewallAssessmentRoutes);
 
 // ✅ SPA catch-all: serve index.html for any non-API client-side route in production
 if (process.env.NODE_ENV === 'production') {

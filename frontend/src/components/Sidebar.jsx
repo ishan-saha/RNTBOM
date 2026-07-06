@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   Shield,
+  ShieldCheck,
   Settings,
   User,
   LogOut,
@@ -140,6 +141,13 @@ const Sidebar = ({ mobileOpen, onCloseMobile }) => {
           {navItem("/scans/completed", CheckCircle, "Completed")}
           {navItem("/scans/failed", XCircle, "Failed Scans")}
           {navItem("/scans/new", PlusCircle, "New Scan")}
+
+          {desktopExpanded && (
+            <p className="text-xs text-slate-500 px-3 mt-4">TOOLS</p>
+          )}
+
+          {navItem("/tools/firewall", ShieldCheck, "Firewall Assessment")}
+          {navItem("/tools/cloud-audit", Shield, "Cloud Infra Audit")}
 
           {/* Keep admin grouping readable only in expanded states to prevent icon crowding on narrow desktops. */}
           {isAdmin() && (

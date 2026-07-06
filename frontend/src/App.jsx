@@ -19,6 +19,8 @@ import AdminDashboard from './pages/AdminDashboard';
 import ProfilePage from './pages/ProfilePage';
 import ScanDetailPage from './pages/ScanDetailPage';
 import ReportDownload from './pages/ReportDownload';
+import FirewallAssessment from './pages/FirewallAssessment';
+import CloudInfraAudit from './pages/CloudInfraAudit';
 
 /* ================= Layout Wrapper ================= */
 const AppLayout = () => {
@@ -150,6 +152,24 @@ const AppLayout = () => {
               element={
                 <PrivateRoute>
                   <ReportDownload />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/tools/firewall"
+              element={
+                <PrivateRoute>
+                  <FirewallAssessment />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/tools/cloud-audit"
+              element={
+                <PrivateRoute>
+                  <CloudInfraAudit />
                 </PrivateRoute>
               }
             />
