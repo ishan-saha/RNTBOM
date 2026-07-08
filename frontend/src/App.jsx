@@ -1,7 +1,11 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { Toaster } from 'react-hot-toast';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider } from './context/AuthContext';
+import theme from './theme/theme';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import PrivateRoute from './components/PrivateRoute';
@@ -21,6 +25,17 @@ import ScanDetailPage from './pages/ScanDetailPage';
 import ReportDownload from './pages/ReportDownload';
 import FirewallAssessment from './pages/FirewallAssessment';
 import CloudInfraAudit from './pages/CloudInfraAudit';
+
+import ComplianceDashboardPage from './pages/Dashboard/DashboardPage';
+import BenchmarksPage from './pages/Benchmarks/BenchmarksPage';
+import BenchmarkImportPage from './pages/BenchmarkImport/BenchmarkImportPage';
+import ConfigurationUploadPage from './pages/ConfigurationUpload/ConfigurationUploadPage';
+import RunScanPage from './pages/RunScan/RunScanPage';
+import ScanHistoryPage from './pages/ScanHistory/ScanHistoryPage';
+import ScanDetailsPage from './pages/ScanDetails/ScanDetailsPage';
+import ReportsPage from './pages/Reports/ReportsPage';
+
+const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 30000 } } });
 
 /* ================= Layout Wrapper ================= */
 const AppLayout = () => {
@@ -156,6 +171,72 @@ const AppLayout = () => {
               }
             />
 
+            {/* COMPLIANCE ROUTES */}
+            <Route
+              path="/compliance/dashboard"
+              element={
+                <PrivateRoute>
+                  <ComplianceDashboardPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/compliance/benchmarks"
+              element={
+                <PrivateRoute>
+                  <BenchmarksPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/compliance/benchmarks/import"
+              element={
+                <PrivateRoute>
+                  <BenchmarkImportPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/compliance/configurations/upload"
+              element={
+                <PrivateRoute>
+                  <ConfigurationUploadPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/compliance/scan/run"
+              element={
+                <PrivateRoute>
+                  <RunScanPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/compliance/scans"
+              element={
+                <PrivateRoute>
+                  <ScanHistoryPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/compliance/scans/:scanId"
+              element={
+                <PrivateRoute>
+                  <ScanDetailsPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/compliance/reports/:scanId"
+              element={
+                <PrivateRoute>
+                  <ReportsPage />
+                </PrivateRoute>
+              }
+            />
+
             <Route
               path="/tools/firewall"
               element={
@@ -196,12 +277,15 @@ const AppLayout = () => {
 /* ================= MAIN APP ================= */
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <AppLayout />
+    <QueryClientProvider client={queryClient}>
+      <MuiThemeProvider theme={theme}>
+        <CssBaseline />
+        <AuthProvider>
+          <Router>
+            <AppLayout />
 
-        {/* Toast */}
-        <Toaster
+            {/* Toast */}
+            <Toaster
           position="top-right"
           toastOptions={{
             style: {
@@ -219,8 +303,10 @@ function App() {
             },
           }}
         />
-      </Router>
-    </AuthProvider>
+          </Router>
+        </AuthProvider>
+      </MuiThemeProvider>
+    </QueryClientProvider>
   );
 }
 

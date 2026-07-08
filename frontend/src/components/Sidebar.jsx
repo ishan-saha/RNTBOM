@@ -12,6 +12,10 @@ import {
   CheckCircle,
   PlusCircle,
   XCircle,
+  FileText,
+  Upload,
+  PlayCircle,
+  BarChart3,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
@@ -141,6 +145,17 @@ const Sidebar = ({ mobileOpen, onCloseMobile }) => {
           {navItem("/scans/completed", CheckCircle, "Completed")}
           {navItem("/scans/failed", XCircle, "Failed Scans")}
           {navItem("/scans/new", PlusCircle, "New Scan")}
+
+          {desktopExpanded && (
+            <p className="text-xs text-slate-500 px-3 mt-4">COMPLIANCE</p>
+          )}
+
+          {navItem("/compliance/dashboard", LayoutDashboard, "Dashboard")}
+          {navItem("/compliance/benchmarks", FileText, "Benchmarks")}
+          {navItem("/compliance/benchmarks/import", Upload, "Import Benchmark")}
+          {navItem("/compliance/configurations/upload", FileText, "Config Upload")}
+          {navItem("/compliance/scan/run", PlayCircle, "Run Scan")}
+          {navItem("/compliance/scans", BarChart3, "Scan History")}
 
           {desktopExpanded && (
             <p className="text-xs text-slate-500 px-3 mt-4">TOOLS</p>

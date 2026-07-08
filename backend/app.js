@@ -10,6 +10,11 @@ const userRoutes = require('./src/routes/userRoutes');
 const scanRoutes = require('./src/routes/scanRoutes'); // ✅ NEW
 const adminSettingsRoutes = require('./src/routes/adminSettingsRoutes');
 const firewallAssessmentRoutes = require('./src/routes/firewallAssessmentRoutes');
+const benchmarkRoutes = require('./src/routes/benchmarkRoutes');
+const configurationRoutes = require('./src/routes/configurationRoutes');
+const complianceRoutes = require('./src/routes/complianceRoutes');
+const reportRoutes = require('./src/routes/reportRoutes');
+const exportRoutes = require('./src/routes/exportRoutes');
 
 const app = express();
 
@@ -58,6 +63,21 @@ app.use('/api/users', userRoutes);
 app.use('/api/scans', scanRoutes); // ✅ NEW
 app.use('/api/admin', adminSettingsRoutes);
 app.use('/api/firewall-assessment', firewallAssessmentRoutes);
+app.use('/api/benchmarks', benchmarkRoutes);
+app.use('/api/configurations', configurationRoutes);
+app.use('/api/compliance', complianceRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/exports', exportRoutes);
+
+const { protect } = require('./src/middleware/auth');
+const { body } = require('express-validator');
+const validate = require('./src/middleware/validate');
+const { runComplianceScan } = require('./src/controllers/complianceController');
+
+app.post('/api/scans/run', protect, [
+  body('benchmarkId').notEmpty().isMongoId(),
+  body('parsedConfigurationId').notEmpty().isMongoId(),
+], validate, runComplianceScan);
 
 // ✅ SPA catch-all: serve index.html for any non-API client-side route in production
 if (process.env.NODE_ENV === 'production') {
