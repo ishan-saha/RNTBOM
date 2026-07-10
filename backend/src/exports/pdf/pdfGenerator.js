@@ -6,8 +6,6 @@ const { complianceCharts } = require('./templates/complianceCharts');
 const { categorySection } = require('./templates/categorySection');
 const { severitySection } = require('./templates/severitySection');
 const { recommendationSection } = require('./templates/recommendationSection');
-const { manualSection } = require('./templates/manualSection');
-const { missingConfigurationSection } = require('./templates/missingConfigurationSection');
 const { technicalAppendix } = require('./templates/technicalAppendix');
 
 async function generatePDF(report, brandingOverrides = {}) {
@@ -51,8 +49,6 @@ async function generatePDF(report, brandingOverrides = {}) {
       categorySection(doc, report, branding);
       severitySection(doc, report, branding);
       recommendationSection(doc, report, branding);
-      manualSection(doc, report, branding);
-      missingConfigurationSection(doc, report, branding);
       technicalAppendix(doc, report, branding);
 
       doc.end();

@@ -1,6 +1,6 @@
 import API from './api';
 
-export const runComplianceScan = (data) => API.post('/scans/run', data);
+export const runComplianceScan = (data) => API.post('/compliance/run', data);
 
 export const getComplianceScans = () => API.get('/compliance');
 

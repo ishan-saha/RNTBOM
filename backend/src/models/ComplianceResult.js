@@ -41,7 +41,7 @@ const ComplianceResultSchema = new mongoose.Schema({
   },
   result: {
     type: String,
-    enum: ['pass', 'fail', 'manual', 'skipped', 'not_found'],
+    enum: ['pass', 'fail', 'warning'],
     required: true,
   },
   expected: {
@@ -72,23 +72,28 @@ const ComplianceResultSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  confidence: {
+    type: Number,
+    default: null,
+  },
+  risk: {
+    type: String,
+    default: null,
+  },
+  recommendation: {
+    type: String,
+    default: '',
+  },
   scannedAt: {
     type: Date,
     default: Date.now,
   },
-  conditions: [{
-    key: { type: String },
-    operator: { type: String },
-    expected: { type: mongoose.Schema.Types.Mixed },
-    actual: { type: mongoose.Schema.Types.Mixed },
-    passed: { type: Boolean },
-    reason: { type: String, default: '' },
-  }],
 }, {
   timestamps: true,
 });
 
 ComplianceResultSchema.index({ scanId: 1, ruleId: 1 });
 ComplianceResultSchema.index({ scanId: 1, result: 1 });
+ComplianceResultSchema.index({ scanId: 1, result: 1, severity: 1 });
 
 module.exports = mongoose.model('ComplianceResult', ComplianceResultSchema);

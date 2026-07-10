@@ -72,7 +72,7 @@ export default function ScanHistoryPage() {
                 <TableCell>Compliance</TableCell>
                 <TableCell>Passed</TableCell>
                 <TableCell>Failed</TableCell>
-                <TableCell>Manual</TableCell>
+                <TableCell>Warnings</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
@@ -96,8 +96,8 @@ export default function ScanHistoryPage() {
                   </TableCell>
                   <TableCell><Chip label={s.summary?.passed || 0} size="small" color="success" variant="outlined" /></TableCell>
                   <TableCell><Chip label={s.summary?.failed || 0} size="small" color="error" variant="outlined" /></TableCell>
-                  <TableCell><Chip label={s.summary?.manual || 0} size="small" color="warning" variant="outlined" /></TableCell>
-                  <TableCell><StatusChip status={s.status === 'completed' ? 'pass' : s.status === 'running' ? 'skipped' : 'not_found'} /></TableCell>
+                  <TableCell><Chip label={s.summary?.warning || 0} size="small" sx={{ color: '#f59e0b', borderColor: '#f59e0b' }} variant="outlined" /></TableCell>
+                  <TableCell><Chip label={s.status} size="small" color={s.status === 'completed' ? 'success' : s.status === 'running' ? 'info' : 'error'} variant="outlined" /></TableCell>
                   <TableCell align="right">
                     <Tooltip title="View details">
                       <IconButton size="small" onClick={() => navigate(`/compliance/scans/${s._id}`)}>

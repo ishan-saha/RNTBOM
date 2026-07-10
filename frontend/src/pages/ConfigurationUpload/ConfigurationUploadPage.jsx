@@ -1,16 +1,15 @@
 import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Button, Card, CardContent, LinearProgress, Alert, Chip,
-  FormControl, InputLabel, Select, MenuItem,
+  FormControl, InputLabel, Select, MenuItem, Divider,
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import WarningIcon from '@mui/icons-material/Warning';
 import API from '../../services/api';
 import { useBenchmarks } from '../../hooks/useBenchmarks';
 
 export default function ConfigurationUploadPage() {
-  const navigate = useNavigate();
   const { data: benchmarks = [] } = useBenchmarks();
   const [files, setFiles] = useState([]);
   const [selectedBenchmark, setSelectedBenchmark] = useState('');
@@ -51,18 +50,14 @@ export default function ConfigurationUploadPage() {
     }
   };
 
-  const config = parsed?.parsedConfiguration || parsed?.configuration || parsed;
-  const configId = parsed?.parsedConfiguration?._id || parsed?._id || parsed?.id;
-  const keyCount = config?.normalizedConfiguration
-    ? Object.keys(config.normalizedConfiguration).length
-    : config?.keys?.length || 0;
+  const summary = parsed;
 
   return (
     <div>
       <div className="mb-6">
         <h4 className="text-2xl font-bold">Upload Configuration</h4>
         <p className="text-sm text-slate-400">
-          Upload configuration files to compare against benchmark rules
+          Upload configuration files to parse and normalize for compliance checking
         </p>
       </div>
 
@@ -77,7 +72,7 @@ export default function ConfigurationUploadPage() {
               id="config-upload"
               type="file"
               multiple
-              accept=".json,.yaml,.yml,.xml,.ini,.properties,.reg,.plist,.conf,.txt"
+              accept=".json,.yaml,.yml,.xml,.ini,.cfg,.conf,.properties,.props,.reg,.plist,.sysctl,.nginx,.ssh_config"
               hidden
               onChange={handleFiles}
             />
@@ -93,7 +88,7 @@ export default function ConfigurationUploadPage() {
               <>
                 <h6 className="text-lg font-semibold text-slate-400">Drop config files here or click to browse</h6>
                 <span className="text-xs text-slate-400">
-                  JSON, YAML, XML, INI, Properties, REG, Plist, Conf
+                  JSON, YAML, XML, INI, Properties, REG, Plist, Conf, sysctl, nginx, SSH
                 </span>
               </>
             )}
@@ -102,10 +97,10 @@ export default function ConfigurationUploadPage() {
           {files.length > 0 && (
             <div className="mt-6 flex flex-col gap-4">
               <FormControl fullWidth size="small">
-                <InputLabel>Benchmark</InputLabel>
+                <InputLabel>Benchmark (for reference)</InputLabel>
                 <Select
                   value={selectedBenchmark}
-                  label="Benchmark"
+                  label="Benchmark (for reference)"
                   onChange={(e) => setSelectedBenchmark(e.target.value)}
                 >
                   {benchmarks.map((b) => (
@@ -121,18 +116,49 @@ export default function ConfigurationUploadPage() {
             </div>
           )}
 
-          {parsed && (
+          {summary && (
             <Alert icon={<CheckCircleIcon />} severity="success" className="mt-6">
-              <p className="text-sm font-medium">Configuration parsed successfully</p>
-              <p className="text-sm">{keyCount} configuration keys extracted</p>
-            </Alert>
-          )}
-
-          {parsed && configId && (
-            <Alert severity="info" className="mt-4">
-              <p className="text-sm">
-                Configuration ID: <code style={{ color: '#6366f1' }}>{configId}</code>
-              </p>
+              <div className="space-y-1">
+                <p className="text-sm font-medium">Configuration parsed successfully</p>
+                <p className="text-sm">{summary.totalKeysExtracted} keys extracted from {summary.filesParsedSuccessfully} file(s)</p>
+                <div className="flex gap-2 mt-2 flex-wrap">
+                  <Chip label={`${summary.totalKeysExtracted} keys`} size="small" color="primary" variant="outlined" />
+                  {summary.parsersUsed?.map((p, i) => (
+                    <Chip key={i} label={p} size="small" variant="outlined" />
+                  ))}
+                </div>
+                <Divider className="my-2" />
+                <p className="text-xs text-slate-400">
+                  Processing time: {(summary.processingTime / 1000).toFixed(1)}s
+                  {summary.failedFiles > 0 && ` | ${summary.failedFiles} file(s) failed`}
+                </p>
+                {summary.parsingWarnings?.length > 0 && (
+                  <div className="mt-1">
+                    <div className="flex items-center gap-1 text-amber-400 text-xs mb-1">
+                      <WarningIcon fontSize="inherit" />
+                      <span>{summary.parsingWarnings.length} warning(s)</span>
+                    </div>
+                    <ul className="text-xs text-amber-300 list-disc list-inside">
+                      {summary.parsingWarnings.slice(0, 5).map((w, i) => (
+                        <li key={i}>{w}</li>
+                      ))}
+                      {summary.parsingWarnings.length > 5 && (
+                        <li className="text-slate-400">...and {summary.parsingWarnings.length - 5} more</li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+                {summary.fileErrors?.length > 0 && (
+                  <div className="mt-1">
+                    <p className="text-xs text-red-400">{summary.fileErrors.length} file(s) had errors</p>
+                    <ul className="text-xs text-red-300 list-disc list-inside">
+                      {summary.fileErrors.map((e, i) => (
+                        <li key={i}>{e.fileName}: {e.error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
             </Alert>
           )}
 
@@ -152,17 +178,6 @@ export default function ConfigurationUploadPage() {
             >
               {uploading ? 'Parsing...' : 'Parse Configuration'}
             </Button>
-            {parsed && configId && (
-              <Button
-                variant="contained"
-                color="success"
-                fullWidth
-                size="large"
-                onClick={() => navigate('/compliance/scan/run', { state: { parsedConfigurationId: configId } })}
-              >
-                Continue to Scan
-              </Button>
-            )}
           </div>
         </CardContent>
       </Card>

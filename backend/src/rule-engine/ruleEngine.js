@@ -1,40 +1,44 @@
 const { loadRules } = require('./ruleLoader');
-const { preprocessRules } = require('./preprocessor');
-const { evaluateRule } = require('./ruleEvaluator');
 const { buildResult, calculateSummary } = require('./resultBuilder');
+const { aiEvaluateRules } = require('../services/ai/aiService');
+const { getBenchmark } = require('../services/benchmarkService');
 
-async function runScan(benchmarkId, config, parsedConfigurationId) {
+async function runScan(benchmarkId, config) {
   const rules = await loadRules(benchmarkId);
 
   if (!rules || rules.length === 0) {
     throw new Error(`No rules found for benchmark "${benchmarkId}"`);
   }
 
-  const processed = preprocessRules(rules);
+  let benchmarkName = 'Unknown';
+  let benchmarkVersion = 'N/A';
+  try {
+    const bm = await getBenchmark(benchmarkId);
+    if (bm) {
+      benchmarkName = bm.name || benchmarkName;
+      benchmarkVersion = bm.version || benchmarkVersion;
+    }
+  } catch { }
 
   const scannedAt = new Date();
-  const results = [];
 
-  for (const rule of processed.valid) {
-    const evaluation = evaluateRule(rule, config, parsedConfigurationId);
-    const result = buildResult(rule, evaluation, scannedAt);
-    results.push(result);
+  const aiResults = await aiEvaluateRules(benchmarkName, benchmarkVersion, rules, config);
+
+  const resultMap = {};
+  for (const ai of aiResults) {
+    resultMap[ai.ruleId] = ai;
   }
 
-  for (const rule of processed.manual) {
-    const evaluation = { status: 'manual', actual: null, reason: 'Manual assessment' };
-    const result = buildResult(rule, evaluation, scannedAt);
-    results.push(result);
-  }
-
-  for (const skipped of processed.skipped) {
-    const rule = rules.find(r => r.ruleId === skipped.ruleId);
-    if (rule) {
-      const evaluation = { status: 'skipped', actual: null, reason: skipped.reason };
-      const result = buildResult(rule, evaluation, scannedAt);
-      results.push(result);
-    }
-  }
+  const results = rules.map(rule => {
+    const ai = resultMap[rule.ruleId] || {
+      status: 'fail',
+      reason: 'No AI evaluation returned for this rule',
+      confidence: null,
+      risk: null,
+      recommendation: rule.remediation || '',
+    };
+    return buildResult(rule, ai, scannedAt);
+  });
 
   const summary = calculateSummary(results);
 

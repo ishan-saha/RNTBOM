@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Button, Grid, Tabs, Tab, Card, CardContent,
+  Button, Grid, Tabs, Tab, Card, CardContent, Chip, Table, TableBody, TableCell,
+  TableRow, TableHead,
 } from '@mui/material';
 import ArticleIcon from '@mui/icons-material/Article';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -29,42 +30,46 @@ export default function ScanDetailsPage() {
   const { scan, results } = data;
   const summary = scan.summary || {};
 
-  const categoryData = {};
-  const severityData = {};
-  const failedResults = [];
+  const { categoryData, severityData, failedResults, warningResults } = useMemo(() => {
+    const cat = {};
+    const sev = {};
+    const failed = [];
+    const warnings = [];
 
-  if (results) {
-    for (const r of results) {
-      const catId = r.categoryId || 'uncategorized';
-      if (!categoryData[catId]) {
-        categoryData[catId] = { categoryId: catId, categoryTitle: r.categoryTitle || catId, total: 0, passed: 0, failed: 0, manual: 0, skipped: 0, notFound: 0, compliance: 0 };
+    if (results) {
+      for (const r of results) {
+        const catId = r.categoryId || 'uncategorized';
+        if (!cat[catId]) {
+          cat[catId] = { categoryId: catId, categoryTitle: r.categoryTitle || catId, total: 0, passed: 0, failed: 0, warning: 0, compliance: 0 };
+        }
+        cat[catId].total++;
+        if (r.result === 'pass') cat[catId].passed++;
+        else if (r.result === 'fail') cat[catId].failed++;
+        else if (r.result === 'warning') cat[catId].warning++;
+
+        const sevKey = r.severity || 'unspecified';
+        if (!sev[sevKey]) {
+          sev[sevKey] = { severity: sevKey, total: 0, passed: 0, failed: 0, warning: 0, compliance: 0 };
+        }
+        sev[sevKey].total++;
+        if (r.result === 'pass') sev[sevKey].passed++;
+
+        if (r.result === 'fail') failed.push(r);
+        if (r.result === 'warning') warnings.push(r);
       }
-      categoryData[catId].total++;
-      if (r.result === 'pass') categoryData[catId].passed++;
-      else if (r.result === 'fail') categoryData[catId].failed++;
-      else if (r.result === 'manual') categoryData[catId].manual++;
-      else if (r.result === 'not_found') categoryData[catId].notFound++;
-      else categoryData[catId].skipped++;
 
-      const sev = r.severity || 'unspecified';
-      if (!severityData[sev]) {
-        severityData[sev] = { severity: sev, total: 0, passed: 0, failed: 0, manual: 0, skipped: 0, notFound: 0, compliance: 0 };
+      for (const c of Object.values(cat)) {
+        const e = c.passed + c.failed;
+        c.compliance = e > 0 ? Number(((c.passed / e) * 100).toFixed(2)) : 0;
       }
-      severityData[sev].total++;
-      if (r.result === 'pass') severityData[sev].passed++;
-
-      if (r.result === 'fail') failedResults.push(r);
+      for (const s of Object.values(sev)) {
+        const e = s.passed + s.failed;
+        s.compliance = e > 0 ? Number(((s.passed / e) * 100).toFixed(2)) : 0;
+      }
     }
 
-    for (const cat of Object.values(categoryData)) {
-      const e = cat.total - cat.manual - cat.skipped;
-      cat.compliance = e > 0 ? Number(((cat.passed / e) * 100).toFixed(2)) : 0;
-    }
-    for (const s of Object.values(severityData)) {
-      const e = s.total - s.manual - s.skipped;
-      s.compliance = e > 0 ? Number(((s.passed / e) * 100).toFixed(2)) : 0;
-    }
-  }
+    return { categoryData: cat, severityData: sev, failedResults: failed, warningResults: warnings };
+  }, [results]);
 
   return (
     <div>
@@ -107,7 +112,8 @@ export default function ScanDetailsPage() {
             <Tab label="Rule Results" />
             <Tab label="Category Analysis" />
             <Tab label="Severity Analysis" />
-            <Tab label="Recommendations" />
+            <Tab label="Failed Rules" />
+            <Tab label="Warnings" />
           </Tabs>
 
           {tab === 0 && (
@@ -143,6 +149,41 @@ export default function ScanDetailsPage() {
           )}
           {tab === 3 && (
             <RecommendationTable recommendations={failedResults} />
+          )}
+          {tab === 4 && (
+            <div>
+              <h6 className="text-lg font-semibold mb-2">
+                Warnings ({warningResults.length})
+              </h6>
+              {warningResults.length > 0 ? (
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Rule ID</TableCell>
+                      <TableCell>Title</TableCell>
+                      <TableCell>Severity</TableCell>
+                      <TableCell>Reason</TableCell>
+                      <TableCell>Expected</TableCell>
+                      <TableCell>Actual</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {warningResults.map((r) => (
+                      <TableRow key={r.ruleId} hover sx={{ cursor: 'pointer' }} onClick={() => setSelectedRule(r)}>
+                        <TableCell className="font-mono font-semibold">{r.ruleId}</TableCell>
+                        <TableCell>{r.title}</TableCell>
+                        <TableCell><Chip label={r.severity} size="small" variant="outlined" /></TableCell>
+                        <TableCell className="text-xs max-w-[200px]">{r.reason}</TableCell>
+                        <TableCell className="font-mono text-xs">{String(r.expected ?? '')}</TableCell>
+                        <TableCell className="font-mono text-xs">{String(r.actual ?? '')}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <p className="text-slate-400 py-8 text-center">No warnings</p>
+              )}
+            </div>
           )}
         </CardContent>
       </Card>

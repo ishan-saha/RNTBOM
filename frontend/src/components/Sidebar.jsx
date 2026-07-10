@@ -2,20 +2,15 @@ import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   Shield,
-  ShieldCheck,
-  Settings,
   User,
   LogOut,
   Menu,
   X,
-  Clock,
-  CheckCircle,
-  PlusCircle,
-  XCircle,
   FileText,
   Upload,
-  PlayCircle,
+  Settings,
   BarChart3,
+  History,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
@@ -57,7 +52,6 @@ const Sidebar = ({ mobileOpen, onCloseMobile }) => {
 
   return (
     <>
-      {/* Add backdrop overlay so the mobile drawer can be dismissed outside the panel. */}
       <button
         type="button"
         onClick={onCloseMobile}
@@ -67,13 +61,11 @@ const Sidebar = ({ mobileOpen, onCloseMobile }) => {
         aria-label="Close sidebar overlay"
       />
 
-      {/* Keep sidebar off-canvas on mobile and sticky on desktop to avoid content overlap at all breakpoints. */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 bg-[#0b0b14] border-r border-white/10 flex flex-col transition-transform duration-300 md:sticky md:top-0 md:translate-x-0 md:h-screen ${
           desktopExpanded ? "md:w-64" : "md:w-20"
         } w-72 ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
-        {/* Use separate close/collapse actions for mobile vs desktop to keep controls intuitive by screen size. */}
         <div className="flex items-center justify-between p-4">
           <div
             className={`inline-flex items-center p-1.5 rounded-md ${desktopExpanded ? "md:inline" : "md:hidden"} inline ${
@@ -109,9 +101,7 @@ const Sidebar = ({ mobileOpen, onCloseMobile }) => {
           </div>
         </div>
 
-        {/* Keep user identity visible on compact widths by showing avatar and hiding verbose text when collapsed. */}
         <div className="px-4 py-3 border-t border-white/10 border-b border-white/10">
-          {/* Route to profile when avatar/name is clicked in the sidebar on both mobile and desktop. */}
           <Link
             to="/profile"
             onClick={onCloseMobile}
@@ -131,55 +121,37 @@ const Sidebar = ({ mobileOpen, onCloseMobile }) => {
           </Link>
         </div>
 
-        {/* Maintain scrollable nav area so long menus remain reachable on short mobile/tablet viewports. */}
         <div className="flex-1 p-3 space-y-2 overflow-y-auto">
-          {/* Dashboard */}
           {navItem("/dashboard", LayoutDashboard, "Dashboard")}
-
-          {/* Show section headings only when expanded so collapsed desktop mode stays compact at 769-1024px. */}
-          {desktopExpanded && (
-            <p className="text-xs text-slate-500 px-3 mt-4">SCANS</p>
-          )}
-
-          {navItem("/scans/active", Clock, "Active Scans")}
-          {navItem("/scans/completed", CheckCircle, "Completed")}
-          {navItem("/scans/failed", XCircle, "Failed Scans")}
-          {navItem("/scans/new", PlusCircle, "New Scan")}
 
           {desktopExpanded && (
             <p className="text-xs text-slate-500 px-3 mt-4">COMPLIANCE</p>
           )}
 
-          {navItem("/compliance/dashboard", LayoutDashboard, "Dashboard")}
-          {navItem("/compliance/benchmarks", FileText, "Benchmarks")}
-          {navItem("/compliance/benchmarks/import", Upload, "Import Benchmark")}
-          {navItem("/compliance/configurations/upload", FileText, "Config Upload")}
-          {navItem("/compliance/scan/run", PlayCircle, "Run Scan")}
-          {navItem("/compliance/scans", BarChart3, "Scan History")}
+          {navItem("/compliance/dashboard", BarChart3, "Compliance Dashboard")}
+          {navItem("/compliance/scans", History, "Scan History")}
+          {navItem("/compliance/scan/run", Settings, "Run Scan")}
 
           {desktopExpanded && (
-            <p className="text-xs text-slate-500 px-3 mt-4">TOOLS</p>
+            <p className="text-xs text-slate-500 px-3 mt-4">BENCHMARKS</p>
           )}
 
-          {navItem("/tools/firewall", ShieldCheck, "Firewall Assessment")}
-          {navItem("/tools/cloud-audit", Shield, "Cloud Infra Audit")}
+          {navItem("/compliance/benchmarks", FileText, "Benchmarks")}
+          {navItem("/compliance/benchmarks/import", Upload, "Import Benchmark")}
+          {navItem("/compliance/configurations/upload", Settings, "Config Upload")}
 
-          {/* Keep admin grouping readable only in expanded states to prevent icon crowding on narrow desktops. */}
           {isAdmin() && (
             <>
               {desktopExpanded && (
                 <p className="text-xs text-slate-500 px-3 mt-4">ADMIN</p>
               )}
               {navItem("/admin", Shield, "Admin Panel")}
-              {navItem("/admin/settings", Settings, "SEO & SMTP")}
             </>
           )}
 
-          {/* Profile */}
           {navItem("/profile", User, "Profile")}
         </div>
 
-        {/* Keep logout action visible in collapsed desktop mode by conditionally hiding only its label text. */}
         <div className="p-3 border-t border-white/10">
           <button
             onClick={handleLogout}

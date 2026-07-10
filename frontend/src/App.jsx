@@ -14,45 +14,29 @@ import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import DashboardPage from './pages/DashboardPage';
 import AdminPage from './pages/AdminPage';
-import AdminSettingsPage from './pages/AdminSettingsPage';
-import ActiveScans from "./pages/ActiveScans";
-import CompletedScans from "./pages/CompletedScans";
-import FailedScans from './pages/FailedScans';
-import NewScan from "./pages/NewScan";
-import AdminDashboard from './pages/AdminDashboard';
 import ProfilePage from './pages/ProfilePage';
-import ScanDetailPage from './pages/ScanDetailPage';
-import ReportDownload from './pages/ReportDownload';
-import FirewallAssessment from './pages/FirewallAssessment';
-import CloudInfraAudit from './pages/CloudInfraAudit';
-
-import ComplianceDashboardPage from './pages/Dashboard/DashboardPage';
 import BenchmarksPage from './pages/Benchmarks/BenchmarksPage';
 import BenchmarkImportPage from './pages/BenchmarkImport/BenchmarkImportPage';
 import ConfigurationUploadPage from './pages/ConfigurationUpload/ConfigurationUploadPage';
-import RunScanPage from './pages/RunScan/RunScanPage';
+import ComplianceDashboardPage from './pages/Dashboard/DashboardPage';
 import ScanHistoryPage from './pages/ScanHistory/ScanHistoryPage';
 import ScanDetailsPage from './pages/ScanDetails/ScanDetailsPage';
 import ReportsPage from './pages/Reports/ReportsPage';
+import RunScanPage from './pages/RunScan/RunScanPage';
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 30000 } } });
 
-/* ================= Layout Wrapper ================= */
 const AppLayout = () => {
   const location = useLocation();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  // Hide sidebar & navbar on auth pages
   const hideLayout = ['/login', '/signup'].includes(location.pathname);
 
-  // Close the mobile drawer after route changes so content is immediately visible on small screens. ok
   const closeMobileSidebar = () => setMobileSidebarOpen(false);
 
   return (
-    // Use a clipped, full-height shell to prevent horizontal bleed on mobile and tablet widths.
     <div className="flex bg-[#0f0f1a] min-h-screen overflow-x-clip">
 
-      {/* Sidebar */}
       {!hideLayout && (
         <Sidebar
           mobileOpen={mobileSidebarOpen}
@@ -60,26 +44,20 @@ const AppLayout = () => {
         />
       )}
 
-      {/* Main Content */}
-      {/* Keep content shrinkable so tables/cards can scroll instead of forcing page overflow at 481-1024px. */}
       <div className="flex-1 flex flex-col min-w-0">
 
-        {/* Navbar */}
         {!hideLayout && (
           <Navbar
             onOpenMobileSidebar={() => setMobileSidebarOpen(true)}
           />
         )}
 
-        {/* Pages */}
-        {/* Add responsive vertical breathing room that stays compact on <=480px devices. */}
         <div className="flex-1 min-w-0">
           <Routes>
-            {/* Public */}
+
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
 
-            {/* Protected */}
             <Route
               path="/dashboard"
               element={
@@ -97,89 +75,7 @@ const AppLayout = () => {
                 </PrivateRoute>
               }
             />
-            <Route
-              path="/admin/dashboard"
-              element={
-                <PrivateRoute requiredRole="admin">
-                  <AdminDashboard />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/admin/settings"
-              element={
-                <PrivateRoute requiredRole="admin">
-                  <AdminSettingsPage />
-                </PrivateRoute>
-              }
-            />
 
-            {/* ✅ SCAN ROUTES */}
-            <Route
-              path="/scans/active"
-              element={
-                <PrivateRoute>
-                  <ActiveScans />
-                </PrivateRoute>
-              }
-            />
-
-            <Route
-              path="/scans/completed"
-              element={
-                <PrivateRoute>
-                  <CompletedScans />
-                </PrivateRoute>
-              }
-            />
-
-            <Route
-              path="/scans/failed"
-              element={
-                <PrivateRoute>
-                  <FailedScans />
-                </PrivateRoute>
-              }
-            />
-
-            <Route
-              path="/scans/new"
-              element={
-                <PrivateRoute>
-                  <NewScan />
-                </PrivateRoute>
-              }
-            />
-
-            {/* Scan detail / report */}
-            <Route
-              path="/scans/:id"
-              element={
-                <PrivateRoute>
-                  <ScanDetailPage />
-                </PrivateRoute>
-              }
-            />
-
-            {/* Full report download page */}
-            <Route
-              path="/scans/:id/report"
-              element={
-                <PrivateRoute>
-                  <ReportDownload />
-                </PrivateRoute>
-              }
-            />
-
-            {/* COMPLIANCE ROUTES */}
-            <Route
-              path="/compliance/dashboard"
-              element={
-                <PrivateRoute>
-                  <ComplianceDashboardPage />
-                </PrivateRoute>
-              }
-            />
             <Route
               path="/compliance/benchmarks"
               element={
@@ -188,6 +84,7 @@ const AppLayout = () => {
                 </PrivateRoute>
               }
             />
+
             <Route
               path="/compliance/benchmarks/import"
               element={
@@ -196,6 +93,7 @@ const AppLayout = () => {
                 </PrivateRoute>
               }
             />
+
             <Route
               path="/compliance/configurations/upload"
               element={
@@ -204,14 +102,16 @@ const AppLayout = () => {
                 </PrivateRoute>
               }
             />
+
             <Route
-              path="/compliance/scan/run"
+              path="/compliance/dashboard"
               element={
                 <PrivateRoute>
-                  <RunScanPage />
+                  <ComplianceDashboardPage />
                 </PrivateRoute>
               }
             />
+
             <Route
               path="/compliance/scans"
               element={
@@ -220,6 +120,7 @@ const AppLayout = () => {
                 </PrivateRoute>
               }
             />
+
             <Route
               path="/compliance/scans/:scanId"
               element={
@@ -228,6 +129,7 @@ const AppLayout = () => {
                 </PrivateRoute>
               }
             />
+
             <Route
               path="/compliance/reports/:scanId"
               element={
@@ -238,19 +140,10 @@ const AppLayout = () => {
             />
 
             <Route
-              path="/tools/firewall"
+              path="/compliance/scan/run"
               element={
                 <PrivateRoute>
-                  <FirewallAssessment />
-                </PrivateRoute>
-              }
-            />
-
-            <Route
-              path="/tools/cloud-audit"
-              element={
-                <PrivateRoute>
-                  <CloudInfraAudit />
+                  <RunScanPage />
                 </PrivateRoute>
               }
             />
@@ -264,7 +157,6 @@ const AppLayout = () => {
               }
             />
 
-            {/* Redirects */}
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
@@ -274,7 +166,6 @@ const AppLayout = () => {
   );
 };
 
-/* ================= MAIN APP ================= */
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -283,26 +174,24 @@ function App() {
         <AuthProvider>
           <Router>
             <AppLayout />
-
-            {/* Toast */}
             <Toaster
-          position="top-right"
-          toastOptions={{
-            style: {
-              background: '#1e1e2e',
-              color: '#e2e8f0',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: '12px',
-              fontSize: '14px',
-            },
-            success: {
-              iconTheme: { primary: '#6366f1', secondary: '#fff' },
-            },
-            error: {
-              iconTheme: { primary: '#f87171', secondary: '#fff' },
-            },
-          }}
-        />
+              position="top-right"
+              toastOptions={{
+                style: {
+                  background: '#1e1e2e',
+                  color: '#e2e8f0',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '12px',
+                  fontSize: '14px',
+                },
+                success: {
+                  iconTheme: { primary: '#6366f1', secondary: '#fff' },
+                },
+                error: {
+                  iconTheme: { primary: '#f87171', secondary: '#fff' },
+                },
+              }}
+            />
           </Router>
         </AuthProvider>
       </MuiThemeProvider>

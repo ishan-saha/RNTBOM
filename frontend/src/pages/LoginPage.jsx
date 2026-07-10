@@ -94,7 +94,7 @@ const LoginPage = () => {
 
       toast.success(`Welcome back, ${user.name}! 👋`);
 
-      navigate(user.role === "admin" ? "/admin/dashboard" : "/dashboard");
+      navigate(user.role === "admin" ? "/admin" : "/dashboard");
     } catch (err) {
       const msg =
         err.response?.data?.message || "Login failed. Please try again.";

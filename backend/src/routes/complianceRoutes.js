@@ -6,6 +6,7 @@ const {
   runComplianceScan,
   getScanResults,
   listScans,
+  deleteScan,
 } = require('../controllers/complianceController');
 
 const router = express.Router();
@@ -31,5 +32,6 @@ router.post(
 
 router.get('/', protect, listScans);
 router.get('/:scanId', protect, getScanResults);
+router.delete('/:scanId', protect, deleteScan);
 
 module.exports = router;

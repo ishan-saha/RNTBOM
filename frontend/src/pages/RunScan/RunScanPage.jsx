@@ -6,7 +6,7 @@ import {
   Stepper, Step, StepLabel, Alert, CircularProgress,
 } from '@mui/material';
 import { useBenchmarks } from '../../hooks/useBenchmarks';
-import { useScans } from '../../hooks/useScans';
+import { useRunScan } from '../../hooks/useScans';
 import { getParsedConfigurations } from '../../services/configurationApi';
 
 export default function RunScanPage() {
@@ -21,7 +21,7 @@ export default function RunScanPage() {
     },
   });
   const configs = configsData || [];
-  const runScanMutation = useScans().mutate;
+  const runScanMutation = useRunScan();
 
   const [activeStep, setActiveStep] = useState(0);
   const [selectedBenchmark, setSelectedBenchmark] = useState('');
@@ -42,11 +42,11 @@ export default function RunScanPage() {
     setError('');
 
     try {
-      const res = await (await import('../../services/scanApi')).runComplianceScan({
+      const res = await runScanMutation.mutateAsync({
         benchmarkId: selectedBenchmark,
         parsedConfigurationId: parsedConfigId,
       });
-      setScanResult(res.data.data);
+      setScanResult(res.data);
       setActiveStep(3);
     } catch (err) {
       setError(err.response?.data?.message || err.message);
@@ -131,7 +131,7 @@ export default function RunScanPage() {
               </h5>
               <p className="text-sm text-slate-400 mb-4">
                 {scanResult.summary?.passed} passed, {scanResult.summary?.failed} failed,{' '}
-                {scanResult.summary?.manual} manual, {scanResult.summary?.notFound} not found
+                {scanResult.summary?.warning} warnings
               </p>
               <div className="flex gap-3 justify-center">
                 <Button

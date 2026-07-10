@@ -4,7 +4,6 @@ const ParsedConfigurationSchema = new mongoose.Schema({
   benchmarkId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Benchmark',
-    required: true,
     index: true,
   },
   userId: {
@@ -21,6 +20,22 @@ const ParsedConfigurationSchema = new mongoose.Schema({
   normalizedConfiguration: {
     type: mongoose.Schema.Types.Mixed,
     default: {},
+  },
+  parserUsed: {
+    type: [String],
+    default: [],
+  },
+  keyCount: {
+    type: Number,
+    default: 0,
+  },
+  parsingWarnings: {
+    type: [String],
+    default: [],
+  },
+  processingTime: {
+    type: Number,
+    default: 0,
   },
   createdAt: {
     type: Date,

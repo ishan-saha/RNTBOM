@@ -22,9 +22,7 @@ const ComplianceScanSchema = new mongoose.Schema({
     total: { type: Number, default: 0 },
     passed: { type: Number, default: 0 },
     failed: { type: Number, default: 0 },
-    manual: { type: Number, default: 0 },
-    skipped: { type: Number, default: 0 },
-    notFound: { type: Number, default: 0 },
+    warning: { type: Number, default: 0 },
     compliancePercentage: { type: Number, default: 0 },
   },
   status: {
@@ -40,6 +38,5 @@ const ComplianceScanSchema = new mongoose.Schema({
 });
 
 ComplianceScanSchema.index({ userId: 1, createdAt: -1 });
-ComplianceScanSchema.index({ benchmarkId: 1 });
 
 module.exports = mongoose.model('ComplianceScan', ComplianceScanSchema);

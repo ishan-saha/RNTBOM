@@ -7,8 +7,7 @@ function severityRank(sev) {
 
 function generateRecommendations(results) {
   const failed = results.filter(r => r.result === 'fail');
-  const manual = results.filter(r => r.result === 'manual');
-  const missing = results.filter(r => r.result === 'not_found');
+  const warnings = results.filter(r => r.result === 'warning');
 
   const recommendations = failed
     .map(r => ({
@@ -18,6 +17,9 @@ function generateRecommendations(results) {
       expected: r.expected,
       actual: r.actual,
       remediation: r.remediation,
+      recommendation: r.recommendation,
+      risk: r.risk,
+      confidence: r.confidence,
       pageNumber: r.pageNumber,
       categoryId: r.categoryId,
       categoryTitle: r.categoryTitle,
@@ -25,31 +27,21 @@ function generateRecommendations(results) {
     }))
     .sort((a, b) => severityRank(a.severity) - severityRank(b.severity));
 
-  const manualChecks = manual.map(r => ({
+  const warningItems = warnings.map(r => ({
     ruleId: r.ruleId,
     title: r.title,
-    reason: r.reason || 'Requires manual assessment',
-    pageNumber: r.pageNumber,
-    categoryId: r.categoryId,
-    categoryTitle: r.categoryTitle,
-    severity: r.severity,
-    audit: r.audit,
-    remediation: r.remediation,
-  }));
-
-  const missingConfigurations = missing.map(r => ({
-    ruleId: r.ruleId,
-    title: r.title,
-    key: r.comparisonKey,
+    reason: r.reason,
     expected: r.expected,
+    actual: r.actual,
+    remediation: r.remediation,
+    recommendation: r.recommendation,
     pageNumber: r.pageNumber,
     categoryId: r.categoryId,
     categoryTitle: r.categoryTitle,
     severity: r.severity,
-    remediation: r.remediation,
   }));
 
-  return { recommendations, manualChecks, missingConfigurations };
+  return { recommendations, warningItems };
 }
 
 module.exports = { generateRecommendations };
