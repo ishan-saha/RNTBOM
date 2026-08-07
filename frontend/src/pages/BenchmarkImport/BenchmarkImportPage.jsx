@@ -1,10 +1,11 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Button, Card, CardContent, LinearProgress, Alert, Chip,
+  Button, Card, CardContent, LinearProgress, Alert, Chip, Divider,
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ErrorIcon from '@mui/icons-material/Error';
 import { useImportBenchmark } from '../../hooks/useBenchmarks';
 
 export default function BenchmarkImportPage() {
@@ -35,7 +36,7 @@ export default function BenchmarkImportPage() {
           if (e.total) setProgress(Math.round((e.loaded / e.total) * 100));
         },
       });
-      setImported(result.data?.benchmark || result.data || result);
+      setImported(result?.data || result);
       setProgress(100);
     } catch (err) {
       console.error('Import failed:', err);
@@ -91,14 +92,38 @@ export default function BenchmarkImportPage() {
             </div>
           )}
 
-          {imported && (
+          {imported && imported.benchmarkId && (
             <Alert icon={<CheckCircleIcon />} severity="success" className="mt-6">
-              <p className="text-sm font-medium">
-                Imported: {imported.name} v{imported.version}
-              </p>
-              <p className="text-sm">
-                {imported.totalRules || imported.ruleCount || 0} rules extracted
-              </p>
+              <div className="space-y-1">
+                <p className="text-sm font-medium">
+                  Imported: {imported.name} v{imported.version}
+                </p>
+                <p className="text-sm">{imported.totalRules} rules extracted</p>
+                <div className="flex gap-2 mt-2">
+                  <Chip label={`${imported.totalAutomated} Automated`} size="small" color="success" variant="outlined" />
+                  <Chip label={`${imported.totalManual} Manual`} size="small" color="warning" variant="outlined" />
+                  {imported.aiEnhanced && (
+                    <Chip label="AI Enhanced" size="small" color="info" variant="outlined" />
+                  )}
+                </div>
+                <Divider className="my-2" />
+                <p className="text-xs text-slate-400">
+                  Processing time: {(imported.processingTime / 1000).toFixed(1)}s
+                  {imported.aiExtracted > 0 && ` | AI extracted: ${imported.aiExtracted} rules`}
+                </p>
+                {imported.totalInvalid > 0 && (
+                  <p className="text-xs text-amber-400">
+                    {imported.totalInvalid} rule{imported.totalInvalid !== 1 ? 's' : ''} had parsing errors
+                  </p>
+                )}
+              </div>
+            </Alert>
+          )}
+
+          {imported && !imported.benchmarkId && (
+            <Alert icon={<ErrorIcon />} severity="warning" className="mt-6">
+              <p className="text-sm font-medium">No rules could be extracted</p>
+              <p className="text-xs text-slate-400">The PDF may not contain recognizable CIS benchmark rules.</p>
             </Alert>
           )}
 

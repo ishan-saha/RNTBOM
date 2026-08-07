@@ -8,6 +8,12 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
+const SUPPORTED_EXTS = new Set([
+  '.json', '.yaml', '.yml', '.xml', '.ini', '.cfg', '.conf',
+  '.properties', '.props', '.reg', '.plist',
+  '.sysctl', '.nginx', '.ssh_config',
+]);
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadDir);
@@ -20,7 +26,12 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  cb(null, true);
+  const ext = path.extname(file.originalname).toLowerCase();
+  if (SUPPORTED_EXTS.has(ext)) {
+    cb(null, true);
+  } else {
+    cb(new Error(`Unsupported file type "${ext}". Supported formats: JSON, YAML, XML, INI, CONF, CFG, Properties, REG, Plist, sysctl, nginx, SSH config`), false);
+  }
 };
 
 const uploadConfig = multer({

@@ -3,9 +3,7 @@ import { Chip } from '@mui/material';
 const STATUS_CONFIG = {
   pass: { label: 'Pass', color: 'success' },
   fail: { label: 'Fail', color: 'error' },
-  manual: { label: 'Manual', color: 'warning' },
-  skipped: { label: 'Skipped', color: 'default' },
-  not_found: { label: 'Not Found', color: 'info' },
+  warning: { label: 'Warning', color: 'warning' },
 };
 
 export default function StatusChip({ status, size = 'small' }) {

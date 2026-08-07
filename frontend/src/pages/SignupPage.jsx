@@ -212,7 +212,7 @@ const SignupPage = () => {
       const token = res.data.data.token;
       login(user, token);
       toast.success(`Account created! Welcome, ${user.name}! 🎉`);
-      navigate(user.role === "admin" ? "/admin/dashboard" : "/dashboard");
+      navigate(user.role === "admin" ? "/admin" : "/dashboard");
     } catch (err) {
       const msg =
         err.response?.data?.message || "Signup failed. Please try again.";

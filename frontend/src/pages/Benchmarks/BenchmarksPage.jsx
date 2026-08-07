@@ -5,7 +5,6 @@ import {
   TableHead, TableRow, Paper, Chip, Tooltip,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import AddIcon from '@mui/icons-material/Add';
 import SearchBar from '../../components/SearchBar/SearchBar';
 import { useBenchmarks, useDeleteBenchmark } from '../../hooks/useBenchmarks';
@@ -76,12 +75,17 @@ export default function BenchmarksPage() {
                     {b.createdAt ? new Date(b.createdAt).toLocaleDateString() : '-'}
                   </TableCell>
                   <TableCell>
-                    <Chip label={b.ruleCount ?? b.totalRules ?? '?'} size="small" color="primary" variant="outlined" />
+                    <div className="flex gap-1 items-center">
+                      <Chip label={b.ruleCount ?? '?'} size="small" color="primary" variant="outlined" />
+                      {b.automatedCount > 0 && (
+                        <Chip label={`${b.automatedCount}A`} size="small" color="success" variant="outlined" sx={{ height: 20, fontSize: 11 }} />
+                      )}
+                      {b.manualCount > 0 && (
+                        <Chip label={`${b.manualCount}M`} size="small" color="warning" variant="outlined" sx={{ height: 20, fontSize: 11 }} />
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell align="right">
-                    <Tooltip title="View rules">
-                      <IconButton size="small"><VisibilityIcon fontSize="small" /></IconButton>
-                    </Tooltip>
                     <Tooltip title="Delete">
                       <IconButton size="small" color="error" onClick={() => deleteMutation.mutate(b._id)}>
                         <DeleteIcon fontSize="small" />

@@ -12,9 +12,7 @@ function analyzeCategories(results) {
         total: 0,
         passed: 0,
         failed: 0,
-        manual: 0,
-        skipped: 0,
-        notFound: 0,
+        warning: 0,
         compliance: 0,
       };
     }
@@ -24,14 +22,12 @@ function analyzeCategories(results) {
     switch (r.result) {
       case 'pass': categories[catId].passed++; break;
       case 'fail': categories[catId].failed++; break;
-      case 'manual': categories[catId].manual++; break;
-      case 'skipped': categories[catId].skipped++; break;
-      case 'not_found': categories[catId].notFound++; break;
+      case 'warning': categories[catId].warning = (categories[catId].warning || 0) + 1; break;
     }
   }
 
   for (const cat of Object.values(categories)) {
-    const evaluable = cat.total - cat.manual - cat.skipped;
+    const evaluable = cat.passed + cat.failed;
     cat.compliance = evaluable > 0
       ? Number(((cat.passed / evaluable) * 100).toFixed(2))
       : 0;

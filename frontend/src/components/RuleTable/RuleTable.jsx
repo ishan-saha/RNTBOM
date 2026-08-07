@@ -28,12 +28,14 @@ export default function RuleTable({ results = [], onRowClick }) {
 
   const columns = [
     { id: 'ruleId', label: 'Rule ID', width: 100 },
-    { id: 'title', label: 'Title', width: 280 },
-    { id: 'categoryTitle', label: 'Category', width: 140 },
-    { id: 'severity', label: 'Severity', width: 90 },
-    { id: 'result', label: 'Status', width: 110 },
-    { id: 'expected', label: 'Expected', width: 200 },
-    { id: 'actual', label: 'Actual', width: 200 },
+    { id: 'title', label: 'Title', width: 260 },
+    { id: 'categoryTitle', label: 'Category', width: 120 },
+    { id: 'severity', label: 'Severity', width: 80 },
+    { id: 'result', label: 'Status', width: 100 },
+    { id: 'risk', label: 'Risk', width: 80 },
+    { id: 'confidence', label: 'Conf.', width: 80 },
+    { id: 'expected', label: 'Expected', width: 160 },
+    { id: 'actual', label: 'Actual', width: 160 },
   ];
 
   const SEVERITY_COLORS = {
@@ -89,10 +91,21 @@ export default function RuleTable({ results = [], onRowClick }) {
                     </span>
                   </TableCell>
                   <TableCell><StatusChip status={r.result} /></TableCell>
-                  <TableCell className="font-mono text-xs max-w-[200px] truncate">
+                  <TableCell>
+                    {r.risk ? (
+                      <span className={`text-xs font-semibold ${
+                        r.risk === 'critical' || r.risk === 'high' ? 'text-red-500' :
+                        r.risk === 'medium' ? 'text-amber-500' : 'text-slate-400'
+                      }`}>{r.risk}</span>
+                    ) : '-'}
+                  </TableCell>
+                  <TableCell className="text-xs text-slate-400">
+                    {r.confidence !== null && r.confidence !== undefined ? `${(r.confidence * 100).toFixed(0)}%` : '-'}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs max-w-[160px] truncate">
                     {r.expected !== null && r.expected !== undefined ? String(r.expected) : '-'}
                   </TableCell>
-                  <TableCell className="font-mono text-xs max-w-[200px] truncate">
+                  <TableCell className="font-mono text-xs max-w-[160px] truncate">
                     {r.actual !== null && r.actual !== undefined ? String(r.actual) : '-'}
                   </TableCell>
                 </TableRow>

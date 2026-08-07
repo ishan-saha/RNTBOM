@@ -5,9 +5,10 @@ function buildReportData({
   categories,
   severity,
   recommendations,
-  manualChecks,
-  missingConfigurations,
+  warningItems,
   trend,
+  aiSection = {},
+  aiEnhanced = false,
 }) {
   return {
     summary: {
@@ -18,9 +19,12 @@ function buildReportData({
     categories,
     severity,
     recommendations,
-    manualChecks,
-    missingConfigurations,
+    warningItems: warningItems || [],
     trend,
+    aiEnhanced,
+    executiveSummary: aiSection.executiveSummary || null,
+    riskAnalysis: aiSection.riskAnalysis || null,
+    aiRecommendations: aiSection.aiRecommendations || null,
     metadata: {
       scanId: scan._id,
       benchmarkId: scan.benchmarkId?._id || scan.benchmarkId,

@@ -25,10 +25,7 @@ function executiveSummary(doc, report, branding) {
     ['Total Rules', String(summary?.totalRules || summary?.total || 0), '#e2e8f0'],
     ['Passed', String(summary?.passed || 0), '#22c55e'],
     ['Failed', String(summary?.failed || 0), '#ef4444'],
-    ['Manual', String(summary?.manual || 0), '#f59e0b'],
-    ['Skipped', String(summary?.skipped || 0), '#94a3b8'],
-    ['Not Found', String(summary?.notFound || 0), '#3b82f6'],
-    ['Automation Rate', `${summary?.automationPercentage || 0}%`, '#6366f1'],
+    ['Warnings', String(summary?.warning || 0), '#f59e0b'],
     ['Failure Rate', `${summary?.failurePercentage || 0}%`, '#ef4444'],
   ];
 

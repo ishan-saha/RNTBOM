@@ -5,6 +5,7 @@ import {
   TableRow, TableHead,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import PsychologyIcon from '@mui/icons-material/Psychology';
 import { useReport } from '../../hooks/useReports';
 import ExportMenu from '../../components/ExportMenu/ExportMenu';
 import ComplianceGauge from '../../components/ComplianceGauge/ComplianceGauge';
@@ -24,7 +25,11 @@ export default function ReportsPage() {
   if (error) return <p className="text-red-500">Failed to load report: {error.message}</p>;
   if (!report) return <p className="text-slate-400">Report not available</p>;
 
-  const { summary, categories, severity, recommendations, manualChecks, missingConfigurations, trend, metadata } = report;
+  const {
+    summary, categories, severity, recommendations, warningItems,
+    trend, metadata,
+    executiveSummary, riskAnalysis, aiRecommendations, aiEnhanced,
+  } = report;
 
   return (
     <div>
@@ -35,6 +40,7 @@ export default function ReportsPage() {
             <h4 className="text-2xl font-bold">Compliance Report</h4>
             <p className="text-sm text-slate-400">
               {metadata?.benchmarkName || 'Benchmark'} — {new Date(metadata?.scannedAt || metadata?.createdAt).toLocaleDateString()}
+              {aiEnhanced && <Chip icon={<PsychologyIcon />} label="AI Enhanced" size="small" color="info" variant="outlined" className="ml-2" />}
             </p>
           </div>
         </div>
@@ -57,10 +63,8 @@ export default function ReportsPage() {
                   { label: 'Total Rules', value: summary?.totalRules || summary?.total, color: '#e2e8f0' },
                   { label: 'Passed', value: summary?.passed, color: '#22c55e' },
                   { label: 'Failed', value: summary?.failed, color: '#ef4444' },
-                  { label: 'Not Found', value: summary?.notFound, color: '#3b82f6' },
-                  { label: 'Manual', value: summary?.manual, color: '#f59e0b' },
-                  { label: 'Skipped', value: summary?.skipped, color: '#94a3b8' },
-                  { label: 'Automation', value: `${summary?.automationPercentage || 0}%`, color: '#6366f1' },
+                  { label: 'Warnings', value: summary?.warning, color: '#f59e0b' },
+                  { label: 'Warning Rate', value: `${summary?.warningPercentage || 0}%`, color: '#f59e0b' },
                   { label: 'Failure Rate', value: `${summary?.failurePercentage || 0}%`, color: '#ef4444' },
                 ].map((item) => (
                   <div key={item.label} className="text-center">
@@ -79,16 +83,83 @@ export default function ReportsPage() {
       <Card>
         <CardContent>
           <Tabs value={tab} onChange={(_, v) => setTab(v)} className="mb-4">
+            {executiveSummary && <Tab label="Executive Summary" />}
             <Tab label="Categories" />
             <Tab label="Severity" />
             <Tab label="Recommendations" />
-            <Tab label="Manual Checks" />
-            <Tab label="Missing Configs" />
+            <Tab label="Warnings" />
             <Tab label="Trend" />
             <Tab label="Metadata" />
           </Tabs>
 
-          {tab === 0 && (
+          {tab === 0 && executiveSummary && (
+            <div>
+              <h6 className="text-lg font-semibold mb-2">Executive Summary</h6>
+              <div className="text-sm text-slate-300 leading-relaxed whitespace-pre-line">
+                {executiveSummary}
+              </div>
+
+              {riskAnalysis && (
+                <div className="mt-6">
+                  <h6 className="text-lg font-semibold mb-2">
+                    Risk Analysis
+                    <Chip
+                      label={riskAnalysis.overallRiskLevel?.toUpperCase() || 'UNKNOWN'}
+                      size="small"
+                      color={
+                        riskAnalysis.overallRiskLevel === 'critical' ? 'error' :
+                        riskAnalysis.overallRiskLevel === 'high' ? 'warning' :
+                        riskAnalysis.overallRiskLevel === 'medium' ? 'info' : 'success'
+                      }
+                      className="ml-2"
+                    />
+                  </h6>
+                  {riskAnalysis.topRisks?.length > 0 && (
+                    <ul className="text-sm text-slate-300 space-y-1 list-disc pl-4 mb-4">
+                      {riskAnalysis.topRisks.map((risk, i) => (
+                        <li key={i}>{risk}</li>
+                      ))}
+                    </ul>
+                  )}
+                  {riskAnalysis.complianceImplications && (
+                    <p className="text-sm text-slate-400 mt-2">{riskAnalysis.complianceImplications}</p>
+                  )}
+                </div>
+              )}
+
+              {aiRecommendations?.quickWins?.length > 0 && (
+                <div className="mt-6">
+                  <h6 className="text-lg font-semibold mb-2">Quick Wins</h6>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Rule ID</TableCell>
+                        <TableCell>Title</TableCell>
+                        <TableCell>Action</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {aiRecommendations.quickWins.map((qw) => (
+                        <TableRow key={qw.ruleId}>
+                          <TableCell className="font-mono font-semibold">{qw.ruleId}</TableCell>
+                          <TableCell>{qw.title}</TableCell>
+                          <TableCell className="text-xs">{qw.action}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+
+              {executiveSummary && (
+                <div className="mt-4 text-xs text-slate-500 italic">
+                  Powered by AI via Llama 3.3 70B
+                </div>
+              )}
+            </div>
+          )}
+
+          {tab === (executiveSummary ? 1 : 0) && (
             <div className="grid grid-cols-2 gap-6">
               <CategoryChart data={categories} />
               <div>
@@ -106,7 +177,7 @@ export default function ReportsPage() {
             </div>
           )}
 
-          {tab === 1 && (
+          {tab === (executiveSummary ? 2 : 1) && (
             <div className="grid grid-cols-2 gap-6">
               <SeverityChart data={severity} />
               <div>
@@ -124,7 +195,7 @@ export default function ReportsPage() {
             </div>
           )}
 
-          {tab === 2 && (
+          {tab === (executiveSummary ? 3 : 2) && (
             <div>
               <h6 className="text-lg font-semibold mb-2">
                 Failed Rules ({recommendations?.length || 0})
@@ -133,77 +204,47 @@ export default function ReportsPage() {
             </div>
           )}
 
-          {tab === 3 && (
+          {tab === (executiveSummary ? 4 : 3) && (
             <div>
               <h6 className="text-lg font-semibold mb-2">
-                Manual Checks ({manualChecks?.length || 0})
+                Warnings ({warningItems?.length || 0})
               </h6>
-              {manualChecks?.length > 0 ? (
+              {warningItems?.length > 0 ? (
                 <Table size="small">
                   <TableHead>
                     <TableRow>
                       <TableCell>Rule ID</TableCell>
                       <TableCell>Title</TableCell>
                       <TableCell>Severity</TableCell>
-                      <TableCell>Audit</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {manualChecks.map((mc) => (
-                      <TableRow key={mc.ruleId}>
-                        <TableCell className="font-mono font-semibold">{mc.ruleId}</TableCell>
-                        <TableCell>{mc.title}</TableCell>
-                        <TableCell><Chip label={mc.severity} size="small" variant="outlined" /></TableCell>
-                        <TableCell className="text-xs text-slate-400 max-w-[300px]">{mc.audit || '-'}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <p className="text-slate-400 py-8 text-center">No manual checks</p>
-              )}
-            </div>
-          )}
-
-          {tab === 4 && (
-            <div>
-              <h6 className="text-lg font-semibold mb-2">
-                Missing Configurations ({missingConfigurations?.length || 0})
-              </h6>
-              {missingConfigurations?.length > 0 ? (
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Rule ID</TableCell>
-                      <TableCell>Title</TableCell>
-                      <TableCell>Config Key</TableCell>
+                      <TableCell>Reason</TableCell>
                       <TableCell>Expected</TableCell>
-                      <TableCell>Remediation</TableCell>
+                      <TableCell>Actual</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {missingConfigurations.map((mc) => (
-                      <TableRow key={mc.ruleId}>
-                        <TableCell className="font-mono font-semibold">{mc.ruleId}</TableCell>
-                        <TableCell>{mc.title}</TableCell>
-                        <TableCell className="font-mono text-xs">{mc.key || '-'}</TableCell>
-                        <TableCell className="font-mono text-xs">{String(mc.expected ?? '')}</TableCell>
-                        <TableCell className="text-xs text-slate-400 max-w-[250px]">{mc.remediation || '-'}</TableCell>
+                    {warningItems.map((w) => (
+                      <TableRow key={w.ruleId}>
+                        <TableCell className="font-mono font-semibold">{w.ruleId}</TableCell>
+                        <TableCell>{w.title}</TableCell>
+                        <TableCell><Chip label={w.severity} size="small" variant="outlined" /></TableCell>
+                        <TableCell className="text-xs max-w-[200px]">{w.reason}</TableCell>
+                        <TableCell className="font-mono text-xs">{String(w.expected ?? '')}</TableCell>
+                        <TableCell className="font-mono text-xs">{String(w.actual ?? '')}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
               ) : (
-                <p className="text-slate-400 py-8 text-center">All configurations present</p>
+                <p className="text-slate-400 py-8 text-center">No warnings</p>
               )}
             </div>
           )}
 
-          {tab === 5 && (
+          {tab === (executiveSummary ? 5 : 4) && (
             <TrendChart trend={trend} />
           )}
 
-          {tab === 6 && (
+          {tab === (executiveSummary ? 6 : 5) && (
             <div>
               <h6 className="text-lg font-semibold mb-2">Report Metadata</h6>
               <Table size="small">
@@ -216,6 +257,7 @@ export default function ReportsPage() {
                     ['Scanned At', new Date(metadata?.scannedAt || metadata?.createdAt).toLocaleString()],
                     ['Total Results', metadata?.totalResults],
                     ['Configuration ID', metadata?.parsedConfigurationId],
+                    ['AI Enhanced', aiEnhanced ? 'Yes' : 'No'],
                   ].map(([label, value]) => (
                     <TableRow key={label}>
                       <TableCell className="text-slate-400 font-semibold w-[200px]">{label}</TableCell>

@@ -3,6 +3,7 @@ const Benchmark = require('../models/Benchmark');
 const ParsedConfiguration = require('../models/ParsedConfiguration');
 const ComplianceScan = require('../models/ComplianceScan');
 const ComplianceResult = require('../models/ComplianceResult');
+const logger = require('../utils/logger');
 const { runScan } = require('../rule-engine/ruleEngine');
 
 const runComplianceScan = async (req, res) => {
@@ -46,7 +47,7 @@ const runComplianceScan = async (req, res) => {
 
     try {
       const config = parsedConfig.normalizedConfiguration || {};
-      const { results, summary } = await runScan(benchmarkId, config, parsedConfigurationId);
+      const { results, summary } = await runScan(benchmarkId, config);
 
       const resultDocs = results.map(r => ({
         scanId: complianceScan._id,
@@ -78,7 +79,7 @@ const runComplianceScan = async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Compliance scan error:', error);
+    logger.error('Compliance scan error', { error: error.message });
     return res.status(500).json({
       success: false,
       message: 'Failed to run compliance scan',
@@ -109,8 +110,35 @@ const getScanResults = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Get scan results error:', error);
+    logger.error('Get scan results error', { error: error.message });
     return res.status(500).json({ success: false, message: 'Failed to fetch scan results' });
+  }
+};
+
+const deleteScan = async (req, res) => {
+  try {
+    const { scanId } = req.params;
+
+    const scan = await ComplianceScan.findOneAndDelete({
+      _id: scanId,
+      userId: req.user._id,
+    });
+
+    if (!scan) {
+      return res.status(404).json({ success: false, message: 'Scan not found' });
+    }
+
+    await ComplianceResult.deleteMany({ scanId });
+
+    logger.info('Scan deleted', { scanId, userId: req.user._id });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Scan deleted successfully',
+    });
+  } catch (error) {
+    logger.error('Delete scan error', { error: error.message });
+    return res.status(500).json({ success: false, message: 'Failed to delete scan' });
   }
 };
 
@@ -126,9 +154,9 @@ const listScans = async (req, res) => {
       data: { scans },
     });
   } catch (error) {
-    console.error('List scans error:', error);
+    logger.error('List scans error', { error: error.message });
     return res.status(500).json({ success: false, message: 'Failed to list scans' });
   }
 };
 
-module.exports = { runComplianceScan, getScanResults, listScans };
+module.exports = { runComplianceScan, getScanResults, listScans, deleteScan };
